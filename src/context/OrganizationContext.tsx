@@ -28,16 +28,16 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return updateOrg(id, data, setOrganization);
   }, [updateOrg, setOrganization]);
 
-  const addMember = useCallback(async (email: string, name: string, role: string) => {
-    if (!organization) return;
+  const addMember = useCallback(async (email: string, name: string, role: string): Promise<Member | null> => {
+    if (!organization) return null;
     return addMemberAction(organization.id, email, name, role, setMembers);
   }, [organization, addMemberAction, setMembers]);
 
-  const updateMember = useCallback(async (id: string, data: Partial<Member>) => {
+  const updateMember = useCallback(async (id: string, data: Partial<Member>): Promise<boolean> => {
     return updateMemberAction(id, data, setMembers);
   }, [updateMemberAction, setMembers]);
 
-  const removeMember = useCallback(async (id: string) => {
+  const removeMember = useCallback(async (id: string): Promise<boolean> => {
     return removeMemberAction(id, setMembers);
   }, [removeMemberAction, setMembers]);
 

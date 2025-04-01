@@ -23,8 +23,8 @@ export interface OrganizationContextType {
   loading: boolean;
   createOrganization: (name: string) => Promise<Organization | null>;
   updateOrganization: (id: string, data: Partial<Organization>) => Promise<void>;
-  addMember: (email: string, name: string, role: string) => Promise<void>;
-  updateMember: (id: string, data: Partial<Member>) => Promise<void>;
-  removeMember: (id: string) => Promise<void>;
+  addMember: (email: string, name: string, role: string) => Promise<Member | null>;
+  updateMember: (id: string, data: Partial<Member>) => Promise<boolean>;
+  removeMember: (id: string) => Promise<boolean>;
   setCurrentOrganization: (org: Organization) => void;
 }
