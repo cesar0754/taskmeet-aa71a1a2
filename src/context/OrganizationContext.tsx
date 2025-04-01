@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
@@ -25,7 +26,7 @@ interface OrganizationContextType {
   organization: Organization | null;
   members: Member[];
   loading: boolean;
-  createOrganization: (name: string) => Promise<void>;
+  createOrganization: (name: string) => Promise<Organization | null>;
   updateOrganization: (id: string, data: Partial<Organization>) => Promise<void>;
   addMember: (email: string, name: string, role: string) => Promise<void>;
   updateMember: (id: string, data: Partial<Member>) => Promise<void>;
@@ -54,6 +55,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       try {
         setLoading(true);
         
+        // Primeiro verificamos se o usuário é proprietário de alguma organização
         const { data: ownedOrgs, error: ownedOrgsError } = await supabase
           .from('organizations')
           .select('*')
@@ -61,6 +63,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         if (ownedOrgsError) throw ownedOrgsError;
 
+        // Depois verificamos se é membro de alguma organização
         const { data: memberOrgs, error: memberOrgsError } = await supabase
           .from('organization_members')
           .select('organization_id')
@@ -70,9 +73,12 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         let selectedOrg = null;
 
+        // Prioridade para organizações que o usuário é dono
         if (ownedOrgs && ownedOrgs.length > 0) {
           selectedOrg = ownedOrgs[0];
-        } else if (memberOrgs && memberOrgs.length > 0) {
+        } 
+        // Se não for dono de nenhuma, mas for membro de alguma
+        else if (memberOrgs && memberOrgs.length > 0) {
           const { data: org, error: orgError } = await supabase
             .from('organizations')
             .select('*')
@@ -86,6 +92,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (selectedOrg) {
           setOrganization(selectedOrg);
           
+          // Carrega os membros da organização selecionada
           const { data: orgMembers, error: membersError } = await supabase
             .from('organization_members')
             .select('*')
@@ -109,19 +116,20 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     fetchOrganization();
   }, [user, toast]);
 
-  const createOrganization = async (name: string) => {
+  const createOrganization = async (name: string): Promise<Organization | null> => {
     if (!user) {
       toast({
         title: 'Erro ao criar organização',
         description: 'Você precisa estar logado para criar uma organização.',
         variant: 'destructive',
       });
-      return;
+      return null;
     }
 
     try {
       setLoading(true);
       
+      // 1. Criar a organização
       const { data: newOrg, error: orgError } = await supabase
         .from('organizations')
         .insert([
@@ -132,6 +140,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (orgError) throw orgError;
 
+      // 2. Adicionar o usuário criador como membro administrador
       const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'Admin';
       
       const { error: memberError } = await supabase
@@ -148,8 +157,10 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (memberError) throw memberError;
 
+      // 3. Definir a organização criada como a organização atual
       setOrganization(newOrg);
       
+      // 4. Carregar os membros da organização (que por enquanto é só o criador)
       const { data: members, error: membersError } = await supabase
         .from('organization_members')
         .select('*')
@@ -158,10 +169,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (membersError) throw membersError;
       setMembers(members || []);
 
-      toast({
-        title: 'Organização criada',
-        description: `A organização "${name}" foi criada com sucesso.`,
-      });
+      return newOrg;
     } catch (error) {
       console.error('Error creating organization:', error);
       toast({
@@ -169,6 +177,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         description: 'Houve um problema ao criar a organização.',
         variant: 'destructive',
       });
+      return null;
     } finally {
       setLoading(false);
     }
@@ -216,6 +225,8 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       setLoading(true);
       
+      // Para membros convidados que ainda não têm conta, usamos 'pending' como user_id temporário
+      // Quando eles se registrarem, atualizaremos este valor com o ID real
       const userId = 'pending';
 
       const { data: newMember, error } = await supabase

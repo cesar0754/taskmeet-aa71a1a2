@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useOrganization } from '@/context/OrganizationContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   name: z.string().min(3, { message: 'O nome da organização deve ter pelo menos 3 caracteres' }),
@@ -19,6 +20,7 @@ type FormValues = z.infer<typeof formSchema>;
 const CreateOrganization: React.FC = () => {
   const { createOrganization, loading } = useOrganization();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -29,10 +31,21 @@ const CreateOrganization: React.FC = () => {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await createOrganization(values.name);
-      navigate('/dashboard');
+      const result = await createOrganization(values.name);
+      if (result) {
+        toast({
+          title: "Organização criada com sucesso",
+          description: `A organização "${values.name}" foi criada e você foi adicionado como membro.`,
+        });
+        navigate('/dashboard');
+      }
     } catch (error) {
       console.error('Error creating organization:', error);
+      toast({
+        title: "Erro ao criar organização",
+        description: "Ocorreu um erro ao criar a organização. Por favor, tente novamente.",
+        variant: "destructive"
+      });
     }
   };
 
