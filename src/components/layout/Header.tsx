@@ -36,7 +36,7 @@ const Header: React.FC = () => {
       <div className="flex-1 flex justify-between items-center">
         <div>
           <h1 className="text-lg font-semibold md:text-xl">
-            {organization?.name || 'Orbit Task Flow'}
+            {organization?.name || 'TaskMeet'}
           </h1>
         </div>
 

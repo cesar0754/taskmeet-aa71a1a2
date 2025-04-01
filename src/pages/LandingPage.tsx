@@ -12,7 +12,7 @@ const LandingPage: React.FC = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <span className="text-xl font-bold text-primary">OrbitTaskFlow</span>
+              <span className="text-xl font-bold text-primary">TaskMeet</span>
             </div>
             <div className="flex items-center space-x-4">
               <Link to="/login">
@@ -171,7 +171,7 @@ const LandingPage: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
-              <span className="text-xl font-bold text-primary">OrbitTaskFlow</span>
+              <span className="text-xl font-bold text-primary">TaskMeet</span>
               <p className="text-muted-foreground mt-2">
                 Gerenciamento de tarefas e reuniões para múltiplas organizações
               </p>
@@ -196,7 +196,7 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
           <div className="border-t mt-12 pt-6 text-center text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} OrbitTaskFlow. Todos os direitos reservados.</p>
+            <p>&copy; {new Date().getFullYear()} TaskMeet. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
