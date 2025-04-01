@@ -27,6 +27,7 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({ onSuccess }) => {
   const { organization } = useOrganization();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStatus, setFormStatus] = useState<'idle' | 'creating' | 'sending'>('idle');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -49,6 +50,7 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({ onSuccess }) => {
 
     try {
       setIsSubmitting(true);
+      setFormStatus('creating');
       
       await createInvitation(
         organization.id,
@@ -73,7 +75,14 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({ onSuccess }) => {
       });
     } finally {
       setIsSubmitting(false);
+      setFormStatus('idle');
     }
+  };
+
+  const getSubmitButtonText = () => {
+    if (formStatus === 'creating') return 'Criando convite...';
+    if (formStatus === 'sending') return 'Enviando e-mail...';
+    return 'Enviar Convite';
   };
 
   return (
@@ -134,7 +143,7 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({ onSuccess }) => {
         />
         
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? 'Enviando...' : 'Enviar Convite'}
+          {getSubmitButtonText()}
         </Button>
       </form>
     </Form>

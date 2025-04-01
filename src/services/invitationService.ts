@@ -2,6 +2,7 @@
 import { supabase } from '../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import { Member } from '../types/organization';
+import { sendInvitationEmail } from './emailService';
 
 export interface Invitation {
   id: string;
@@ -57,8 +58,30 @@ export async function createInvitation(
 
     console.log('Convite criado com sucesso:', data);
     
-    // Aqui seria o lugar para enviar um e-mail com o link do convite
-    // Implementação do envio de e-mail será adicionada posteriormente
+    // Buscar o nome da organização
+    const { data: orgData, error: orgError } = await supabase
+      .from('organizations')
+      .select('name')
+      .eq('id', organizationId)
+      .single();
+    
+    if (orgError) {
+      console.error('Erro ao buscar organização:', orgError);
+    }
+    
+    const organizationName = orgData?.name || 'TaskMeet';
+    
+    // Preparar e enviar o e-mail de convite
+    const baseUrl = window.location.origin;
+    const inviteLink = `${baseUrl}/accept-invite?token=${token}`;
+    
+    await sendInvitationEmail(
+      email,
+      name,
+      organizationName,
+      inviteLink,
+      role
+    );
     
     return data;
   } catch (error) {
