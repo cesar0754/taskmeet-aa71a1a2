@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -45,9 +44,9 @@ export interface Task {
 
 export const useDashboardData = () => {
   const { user } = useAuth();
-  const { organization } = useOrganization();
   const navigate = useNavigate();
-
+  
+  // Inicializa com valores padrão
   const [stats, setStats] = useState<DashboardStats>({
     tasksCount: 0,
     meetingsCount: 0,
@@ -135,6 +134,16 @@ export const useDashboardData = () => {
     },
   ]);
 
+  // Aqui usamos try/catch para evitar que o erro se propague se o context não estiver disponível
+  let organization = null;
+  try {
+    // Tenta obter a organização do contexto, mas não deixa o erro se propagar
+    const orgContext = useOrganization();
+    organization = orgContext.organization;
+  } catch (error) {
+    console.log('OrganizationContext não disponível:', error);
+  }
+
   useEffect(() => {
     if (!user) {
       navigate('/login');
@@ -188,7 +197,9 @@ export const useDashboardData = () => {
       }
     };
 
-    fetchData();
+    if (organization) {
+      fetchData();
+    }
   }, [user, organization, navigate]);
 
   return {
