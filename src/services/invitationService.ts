@@ -189,8 +189,11 @@ export async function getInvitationsByOrganization(organizationId: string): Prom
   }
 }
 
-export async function deleteInvitation(id: string): Promise<void> {
+export async function deleteInvitation(id: string): Promise<boolean> {
   try {
+    console.log('Iniciando processo de remoção do convite com ID:', id);
+    
+    // Opção 1: Exclusão real (recomendada para convites)
     const { error } = await supabase
       .from('member_invitations')
       .delete()
@@ -200,6 +203,9 @@ export async function deleteInvitation(id: string): Promise<void> {
       console.error('Erro ao excluir convite:', error);
       throw error;
     }
+    
+    console.log('Convite removido com sucesso do banco de dados');
+    return true;
   } catch (error) {
     console.error('Erro completo ao excluir convite:', error);
     throw error;

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -20,19 +20,17 @@ const InvitationsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<Invitation | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // Chave para forçar a atualização
 
-  useEffect(() => {
-    if (organization) {
-      loadInvitations();
-    }
-  }, [organization]);
-
-  const loadInvitations = async () => {
+  // Refatorando o carregamento para usar useCallback
+  const loadInvitations = useCallback(async () => {
     if (!organization) return;
     
     try {
       setLoading(true);
+      console.log('Carregando convites para organização:', organization.id);
       const invitationsList = await getInvitationsByOrganization(organization.id);
+      console.log('Convites carregados:', invitationsList?.length || 0);
       setInvitations(invitationsList);
     } catch (error) {
       console.error('Erro ao carregar convites:', error);
@@ -44,21 +42,38 @@ const InvitationsList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [organization, toast]);
+
+  useEffect(() => {
+    if (organization) {
+      loadInvitations();
+    }
+  }, [organization, loadInvitations, refreshKey]);
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
     
     try {
       setIsDeleting(true);
-      await deleteInvitation(deleteConfirm.id);
+      console.log('Removendo convite com ID:', deleteConfirm.id);
       
-      setInvitations(invitations.filter(inv => inv.id !== deleteConfirm.id));
+      const success = await deleteInvitation(deleteConfirm.id);
       
-      toast({
-        title: 'Convite removido',
-        description: 'O convite foi removido com sucesso.',
-      });
+      if (success) {
+        console.log('Atualizando lista de convites após remoção');
+        // Remove o convite da lista local
+        setInvitations(prev => prev.filter(inv => inv.id !== deleteConfirm.id));
+        
+        toast({
+          title: 'Convite removido',
+          description: 'O convite foi removido com sucesso.',
+        });
+        
+        // Força uma nova busca de dados após um breve delay
+        setTimeout(() => {
+          setRefreshKey(prev => prev + 1);
+        }, 500);
+      }
     } catch (error) {
       console.error('Erro ao remover convite:', error);
       toast({
@@ -67,6 +82,7 @@ const InvitationsList: React.FC = () => {
         variant: 'destructive',
       });
     } finally {
+      // Sempre limpe o estado de confirmação, independente do resultado
       setIsDeleting(false);
       setDeleteConfirm(null);
     }
