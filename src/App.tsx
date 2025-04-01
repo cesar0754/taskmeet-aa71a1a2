@@ -20,30 +20,32 @@ import NotFound from "./pages/NotFound";
 // Criando a instância de QueryClient fora da função de componente
 const queryClient = new QueryClient();
 
-const App = () => (
-  <BrowserRouter>
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <OrganizationProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/create-organization" element={<CreateOrganizationPage />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/members" element={<MembersPage />} />
-              <Route path="/accept-invite" element={<AcceptInvitePage />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </TooltipProvider>
-        </OrganizationProvider>
-      </QueryClientProvider>
-    </AuthProvider>
-  </BrowserRouter>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <OrganizationProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/create-organization" element={<CreateOrganizationPage />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/members" element={<MembersPage />} />
+                <Route path="/accept-invite" element={<AcceptInvitePage />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </TooltipProvider>
+          </OrganizationProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
