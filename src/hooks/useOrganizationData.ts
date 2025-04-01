@@ -16,6 +16,7 @@ export function useOrganizationData(user: User | null) {
     organization: state.organization,
     members: state.members,
     loading: state.loading,
+    setOrganization: state.setOrganization,
     setMembers: state.setMembers,
     setCurrentOrganization: state.setCurrentOrganization
   };
