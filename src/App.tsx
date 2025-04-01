@@ -16,16 +16,17 @@ import Dashboard from "./pages/Dashboard";
 import MembersPage from "./pages/MembersPage";
 import NotFound from "./pages/NotFound";
 
+// Criando a instância de QueryClient fora da função de componente
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <BrowserRouter>
     <AuthProvider>
-      <OrganizationProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <OrganizationProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
@@ -36,11 +37,11 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </OrganizationProvider>
+          </TooltipProvider>
+        </OrganizationProvider>
+      </QueryClientProvider>
     </AuthProvider>
-  </QueryClientProvider>
+  </BrowserRouter>
 );
 
 export default App;
