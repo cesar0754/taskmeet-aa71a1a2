@@ -1,18 +1,16 @@
 
-import React, { useState } from 'react';
-import { Bell, Menu } from 'lucide-react';
+import React from 'react';
+import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useOrganization } from '@/context/OrganizationContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import Sidebar from './Sidebar';
 import { Badge } from '@/components/ui/badge';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 const Header: React.FC = () => {
   const { user } = useAuth();
   const { organization } = useOrganization();
-  const [isOpen, setIsOpen] = useState(false);
   
   // Placeholder for notification count
   const notificationCount = 3;
@@ -20,17 +18,7 @@ const Header: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 border-b bg-background flex items-center h-16 px-4">
       <div className="flex items-center gap-2 md:hidden">
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-0">
-            <Sidebar />
-          </SheetContent>
-        </Sheet>
+        <SidebarTrigger />
       </div>
 
       <div className="flex-1 flex justify-between items-center">
