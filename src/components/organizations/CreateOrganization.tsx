@@ -31,6 +31,15 @@ const CreateOrganization: React.FC = () => {
 
   const onSubmit = async (values: FormValues) => {
     try {
+      if (!createOrganization) {
+        toast({
+          title: "Erro ao criar organização",
+          description: "A função de criação de organização não está disponível.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       const result = await createOrganization(values.name);
       if (result) {
         toast({

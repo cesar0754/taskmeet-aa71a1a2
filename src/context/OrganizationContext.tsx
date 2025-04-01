@@ -1,17 +1,28 @@
 
 import React, { createContext, useContext } from 'react';
 import { useAuth } from './AuthContext';
-import { useOrganizationState } from '@/hooks/useOrganizationState';
-import { OrganizationContextType } from '@/types/organization';
+import { useOrganizationData } from '@/hooks/useOrganizationData';
+import { Organization, Member, OrganizationContextType } from '@/types/organization';
+import { useOrganizationActions } from '@/hooks/useOrganizationActions';
+import { useMemberActions } from '@/hooks/useMemberActions';
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
 export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const organizationState = useOrganizationState(user);
+  const organizationData = useOrganizationData(user);
+  const organizationActions = useOrganizationActions();
+  const memberActions = useMemberActions();
+
+  // Combine data and actions to provide complete context
+  const contextValue: OrganizationContextType = {
+    ...organizationData,
+    ...organizationActions,
+    ...memberActions
+  };
 
   return (
-    <OrganizationContext.Provider value={organizationState}>
+    <OrganizationContext.Provider value={contextValue}>
       {children}
     </OrganizationContext.Provider>
   );
