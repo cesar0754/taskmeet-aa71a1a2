@@ -4,6 +4,7 @@ import { Organization, Member } from '../types/organization';
 
 export async function fetchUserOrganizations(userId: string): Promise<Organization | null> {
   try {
+    console.log("Buscando organizações para o usuário:", userId);
     const { data, error } = await supabase
       .from('organizations')
       .select('*')
@@ -15,6 +16,7 @@ export async function fetchUserOrganizations(userId: string): Promise<Organizati
       throw error;
     }
 
+    console.log("Organizações encontradas:", data);
     return data;
   } catch (error) {
     console.error('Erro completo ao buscar organizações:', error);
@@ -24,6 +26,7 @@ export async function fetchUserOrganizations(userId: string): Promise<Organizati
 
 export async function fetchOrganizationMembers(organizationId: string): Promise<Member[]> {
   try {
+    console.log("Buscando membros para a organização:", organizationId);
     const { data, error } = await supabase
       .from('organization_members')
       .select('*')
@@ -34,6 +37,7 @@ export async function fetchOrganizationMembers(organizationId: string): Promise<
       throw error;
     }
 
+    console.log("Membros encontrados:", data);
     return data || [];
   } catch (error) {
     console.error('Erro completo ao buscar membros:', error);
@@ -67,9 +71,9 @@ export async function createNewOrganization(name: string, userId: string): Promi
     const userName = userData.user?.user_metadata?.name || userData.user?.email?.split('@')[0] || 'Admin';
     const userEmail = userData.user?.email || '';
     
-    console.log('Dados do usuário:', { userName, userEmail });
+    console.log('Dados do usuário para adicionar como membro:', { userName, userEmail });
 
-    const { error: memberError } = await supabase
+    const { data: memberData, error: memberError } = await supabase
       .from('organization_members')
       .insert([
         { 
@@ -79,12 +83,15 @@ export async function createNewOrganization(name: string, userId: string): Promi
           name: userName,
           email: userEmail
         }
-      ]);
+      ])
+      .select();
 
     if (memberError) {
       console.error('Erro ao adicionar membro:', memberError);
       throw memberError;
     }
+
+    console.log('Membro adicionado:', memberData);
 
     return newOrg;
   } catch (error) {

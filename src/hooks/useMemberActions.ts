@@ -1,22 +1,19 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Organization, Member } from '@/types/organization';
+import { Member } from '@/types/organization';
 import { 
   addNewMember,
   updateExistingMember,
   removeExistingMember
 } from '@/services/organizationService';
 
-export function useMemberActions(
-  organization: Organization | null,
-  setMembers: React.Dispatch<React.SetStateAction<Member[]>>
-) {
+export function useMemberActions() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const addMember = async (email: string, name: string, role: string) => {
-    if (!organization) {
+  const addMember = async (organizationId: string, email: string, name: string, role: string, setMembers: React.Dispatch<React.SetStateAction<Member[]>>) => {
+    if (!organizationId) {
       toast({
         title: 'Erro ao adicionar membro',
         description: 'Nenhuma organização selecionada.',
@@ -28,7 +25,7 @@ export function useMemberActions(
     try {
       setLoading(true);
       
-      const newMember = await addNewMember(organization.id, email, name, role);
+      const newMember = await addNewMember(organizationId, email, name, role);
       
       setMembers(prev => [...prev, newMember]);
 
@@ -48,7 +45,7 @@ export function useMemberActions(
     }
   };
 
-  const updateMember = async (id: string, data: Partial<Member>) => {
+  const updateMember = async (id: string, data: Partial<Member>, setMembers: React.Dispatch<React.SetStateAction<Member[]>>) => {
     try {
       setLoading(true);
       
@@ -74,7 +71,7 @@ export function useMemberActions(
     }
   };
 
-  const removeMember = async (id: string) => {
+  const removeMember = async (id: string, setMembers: React.Dispatch<React.SetStateAction<Member[]>>) => {
     try {
       setLoading(true);
       

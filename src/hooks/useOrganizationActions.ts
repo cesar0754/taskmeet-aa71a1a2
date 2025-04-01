@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { Organization, Member } from '@/types/organization';
 import { 
@@ -9,16 +8,12 @@ import {
   fetchOrganizationMembers
 } from '@/services/organizationService';
 
-export function useOrganizationActions(
-  user: User | null,
-  setMembers: React.Dispatch<React.SetStateAction<Member[]>>,
-  setOrganization: React.Dispatch<React.SetStateAction<Organization | null>>
-) {
+export function useOrganizationActions() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const createOrganization = async (name: string): Promise<Organization | null> => {
-    if (!user) {
+  const createOrganization = async (name: string, userId: string): Promise<Organization | null> => {
+    if (!userId) {
       toast({
         title: 'Erro ao criar organização',
         description: 'Você precisa estar logado para criar uma organização.',
@@ -30,13 +25,15 @@ export function useOrganizationActions(
     try {
       setLoading(true);
       
-      const newOrg = await createNewOrganization(name, user.id);
+      const newOrg = await createNewOrganization(name, userId);
       if (!newOrg) return null;
-
-      setOrganization(newOrg);
       
       const members = await fetchOrganizationMembers(newOrg.id);
-      setMembers(members);
+
+      toast({
+        title: 'Organização criada',
+        description: `A organização "${name}" foi criada com sucesso.`,
+      });
 
       return newOrg;
     } catch (error) {
@@ -52,7 +49,7 @@ export function useOrganizationActions(
     }
   };
 
-  const updateOrganization = async (id: string, data: Partial<Organization>) => {
+  const updateOrganization = async (id: string, data: Partial<Organization>, setOrganization: React.Dispatch<React.SetStateAction<Organization | null>>) => {
     try {
       setLoading(true);
       

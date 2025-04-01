@@ -40,13 +40,22 @@ const CreateOrganization: React.FC = () => {
         return;
       }
       
+      console.log("Iniciando criação da organização:", values.name);
       const result = await createOrganization(values.name);
+      console.log("Resultado da criação:", result);
+      
       if (result) {
         toast({
           title: "Organização criada com sucesso",
           description: `A organização "${values.name}" foi criada e você foi adicionado como membro.`,
         });
         navigate('/dashboard');
+      } else {
+        toast({
+          title: "Erro ao criar organização",
+          description: "Não foi possível criar a organização. Por favor, tente novamente.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Error creating organization:', error);

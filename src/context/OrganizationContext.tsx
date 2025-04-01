@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { useOrganizationData } from '@/hooks/useOrganizationData';
 import { Organization, Member, OrganizationContextType } from '@/types/organization';
@@ -10,15 +10,48 @@ const OrganizationContext = createContext<OrganizationContextType | undefined>(u
 
 export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const organizationData = useOrganizationData(user);
-  const organizationActions = useOrganizationActions();
-  const memberActions = useMemberActions();
+  const { organization, members, loading, setMembers, setOrganization, setCurrentOrganization } = useOrganizationData(user);
+  const { createOrganization: createOrg, updateOrganization: updateOrg, loading: orgActionsLoading } = useOrganizationActions();
+  const { addMember: addMemberAction, updateMember: updateMemberAction, removeMember: removeMemberAction, loading: memberActionsLoading } = useMemberActions();
+
+  // Adapters para garantir a compatibilidade com a API anterior
+  const createOrganization = useCallback(async (name: string): Promise<Organization | null> => {
+    if (!user) return null;
+    const newOrg = await createOrg(name, user.id);
+    if (newOrg) {
+      setOrganization(newOrg);
+    }
+    return newOrg;
+  }, [user, createOrg, setOrganization]);
+
+  const updateOrganization = useCallback(async (id: string, data: Partial<Organization>) => {
+    return updateOrg(id, data, setOrganization);
+  }, [updateOrg, setOrganization]);
+
+  const addMember = useCallback(async (email: string, name: string, role: string) => {
+    if (!organization) return;
+    return addMemberAction(organization.id, email, name, role, setMembers);
+  }, [organization, addMemberAction, setMembers]);
+
+  const updateMember = useCallback(async (id: string, data: Partial<Member>) => {
+    return updateMemberAction(id, data, setMembers);
+  }, [updateMemberAction, setMembers]);
+
+  const removeMember = useCallback(async (id: string) => {
+    return removeMemberAction(id, setMembers);
+  }, [removeMemberAction, setMembers]);
 
   // Combine data and actions to provide complete context
   const contextValue: OrganizationContextType = {
-    ...organizationData,
-    ...organizationActions,
-    ...memberActions
+    organization,
+    members,
+    loading: loading || orgActionsLoading || memberActionsLoading,
+    createOrganization,
+    updateOrganization,
+    addMember,
+    updateMember,
+    removeMember,
+    setCurrentOrganization
   };
 
   return (
