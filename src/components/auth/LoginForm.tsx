@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'E-mail inválido' }),
@@ -18,7 +18,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const LoginForm: React.FC = () => {
   const { signIn } = useAuth();
-  const navigate = useNavigate();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
 
   const form = useForm<FormValues>({
@@ -33,9 +33,14 @@ const LoginForm: React.FC = () => {
     try {
       setIsLoading(true);
       await signIn(values.email, values.password);
-      navigate('/dashboard');
+      // O redirecionamento será feito pelo useEffect no LoginPage
     } catch (error) {
       console.error('Login error:', error);
+      toast({
+        title: 'Erro ao fazer login',
+        description: 'Verifique suas credenciais e tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
