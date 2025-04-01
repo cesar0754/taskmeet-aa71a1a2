@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useOrganization } from '@/context/OrganizationContext';
 import { 
   initialStats, 
   mockActivities, 
@@ -23,14 +24,11 @@ export const useDashboardData = () => {
   const [meetings, setMeetings] = useState<Meeting[]>(mockMeetings);
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
 
-  // Aqui usamos try/catch para evitar que o erro se propague se o context não estiver disponível
+  // Obtenha a organização do contexto, com tratamento de erros para caso o contexto não esteja disponível
   let organization = null;
   try {
-    // Tenta importar dinamicamente para evitar problemas de dependência circular
-    const { useOrganization } = require('@/context/OrganizationContext');
-    // Tenta obter a organização do contexto, mas não deixa o erro se propagar
-    const orgContext = useOrganization();
-    organization = orgContext.organization;
+    const { organization: contextOrganization } = useOrganization();
+    organization = contextOrganization;
   } catch (error) {
     console.log('OrganizationContext não disponível:', error);
   }

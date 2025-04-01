@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -8,22 +8,41 @@ import DashboardContent from '@/components/dashboard/DashboardContent';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useAuth } from '@/context/AuthContext';
 import { useOrganization } from '@/context/OrganizationContext';
+import { initialStats, mockActivities, mockMeetings, mockTasks } from '@/data/dashboardMockData';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const { organization } = useOrganization();
   const navigate = useNavigate();
-  const { stats, activities, meetings, tasks } = useDashboardData();
-
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    } else if (!organization) {
-      navigate('/create-organization');
+  let organizationData = null;
+  let stats = initialStats;
+  let activities = [];
+  let meetings = [];
+  let tasks = [];
+  
+  try {
+    const { organization } = useOrganization();
+    organizationData = organization;
+    
+    // Só carregamos os dados do dashboard se o contexto de organização estiver disponível
+    if (organization) {
+      const dashboardData = useDashboardData();
+      stats = dashboardData.stats;
+      activities = dashboardData.activities;
+      meetings = dashboardData.meetings;
+      tasks = dashboardData.tasks;
     }
-  }, [user, organization, navigate]);
+  } catch (error) {
+    console.error("Erro ao acessar contexto de organização:", error);
+    // Se ocorrer algum erro ao tentar acessar o contexto, redirecionamos para a página de login
+    if (user) {
+      navigate('/create-organization');
+    } else {
+      navigate('/login');
+    }
+    return null;
+  }
 
-  if (!user || !organization) {
+  if (!user || !organizationData) {
     return null; // Não renderiza nada até redirecionar
   }
 
