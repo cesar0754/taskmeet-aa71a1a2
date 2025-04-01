@@ -14,6 +14,7 @@ import RegisterPage from "./pages/RegisterPage";
 import CreateOrganizationPage from "./pages/CreateOrganizationPage";
 import Dashboard from "./pages/Dashboard";
 import MembersPage from "./pages/MembersPage";
+import AcceptInvitePage from "./pages/AcceptInvitePage";
 import NotFound from "./pages/NotFound";
 
 // Criando a instância de QueryClient fora da função de componente
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/create-organization" element={<CreateOrganizationPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/members" element={<MembersPage />} />
+              <Route path="/accept-invite" element={<AcceptInvitePage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

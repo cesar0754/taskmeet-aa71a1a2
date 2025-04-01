@@ -9,13 +9,62 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      member_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          name: string
+          organization_id: string
+          role: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          name: string
+          organization_id: string
+          role?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          name?: string
+          organization_id?: string
+          role?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string
           email: string
           id: string
+          is_first_login: boolean | null
           name: string
           organization_id: string
+          pending: boolean | null
           role: string
           user_id: string
         }
@@ -23,8 +72,10 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          is_first_login?: boolean | null
           name: string
           organization_id: string
+          pending?: boolean | null
           role?: string
           user_id: string
         }
@@ -32,8 +83,10 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          is_first_login?: boolean | null
           name?: string
           organization_id?: string
+          pending?: boolean | null
           role?: string
           user_id?: string
         }

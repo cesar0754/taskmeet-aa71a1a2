@@ -5,13 +5,16 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useOrganization } from '@/context/OrganizationContext';
 import MembersList from '@/components/members/MembersList';
 import AddMemberForm from '@/components/members/AddMemberForm';
+import InvitationsList from '@/components/members/InvitationsList';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserPlus } from 'lucide-react';
 
 const MembersPage: React.FC = () => {
-  const { organization, members, loading } = useOrganization();
+  const { organization, loading } = useOrganization();
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('members');
 
   if (loading) {
     return (
@@ -44,13 +47,29 @@ const MembersPage: React.FC = () => {
                     Preencha os detalhes do novo membro para enviar um convite.
                   </DialogDescription>
                 </DialogHeader>
-                <AddMemberForm onSuccess={() => setOpen(false)} />
+                <AddMemberForm 
+                  onSuccess={() => {
+                    setOpen(false);
+                    setActiveTab('invitations');
+                  }} 
+                />
               </DialogContent>
             </Dialog>
           }
         />
 
-        <MembersList />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="members">Membros Ativos</TabsTrigger>
+            <TabsTrigger value="invitations">Convites Pendentes</TabsTrigger>
+          </TabsList>
+          <TabsContent value="members" className="mt-4">
+            <MembersList />
+          </TabsContent>
+          <TabsContent value="invitations" className="mt-4">
+            <InvitationsList />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

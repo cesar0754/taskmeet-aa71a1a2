@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useOrganization } from '@/context/OrganizationContext';
 import { useToast } from '@/hooks/use-toast';
+import { createInvitation } from '@/services/invitationService';
 
 const formSchema = z.object({
   name: z.string().min(3, { message: 'O nome deve ter pelo menos 3 caracteres' }),
@@ -23,7 +24,7 @@ interface AddMemberFormProps {
 }
 
 const AddMemberForm: React.FC<AddMemberFormProps> = ({ onSuccess }) => {
-  const { addMember } = useOrganization();
+  const { organization } = useOrganization();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,22 +38,37 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({ onSuccess }) => {
   });
 
   const onSubmit = async (values: FormValues) => {
+    if (!organization) {
+      toast({
+        title: 'Erro ao adicionar membro',
+        description: 'Nenhuma organização selecionada.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      await addMember(values.email, values.name, values.role);
+      
+      await createInvitation(
+        organization.id,
+        values.email,
+        values.name,
+        values.role
+      );
       
       toast({
-        title: 'Membro adicionado',
+        title: 'Convite enviado',
         description: `Um convite foi enviado para ${values.email}`,
       });
       
       form.reset();
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Erro ao adicionar membro:', error);
+      console.error('Erro ao enviar convite:', error);
       toast({
-        title: 'Erro ao adicionar membro',
-        description: 'Houve um problema ao adicionar o membro à organização.',
+        title: 'Erro ao enviar convite',
+        description: 'Houve um problema ao enviar o convite.',
         variant: 'destructive',
       });
     } finally {
@@ -118,7 +134,7 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({ onSuccess }) => {
         />
         
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? 'Adicionando...' : 'Adicionar Membro'}
+          {isSubmitting ? 'Enviando...' : 'Enviar Convite'}
         </Button>
       </form>
     </Form>
