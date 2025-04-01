@@ -7,11 +7,13 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
-export type User = {
+// Definindo um tipo que seja compatível com o tipo User do Supabase
+export type UserAttributes = {
   id: string;
-  email: string;
+  email?: string; // Tornando opcional para compatibilidade
   user_metadata?: {
     name?: string;
+    avatar_url?: string; // Adicionando avatar_url
   };
 };
 

@@ -1,7 +1,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, User, getCurrentUser } from '../lib/supabase';
+import { supabase, UserAttributes } from '../lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -21,8 +22,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const currentUser = await getCurrentUser();
-        setUser(currentUser);
+        const currentUser = await supabase.auth.getUser();
+        setUser(currentUser.data.user);
       } catch (error) {
         console.error('Error fetching user:', error);
       } finally {

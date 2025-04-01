@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Bell, Menu, X } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useOrganization } from '@/context/OrganizationContext';
@@ -52,7 +52,10 @@ const Header: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name || 'User'} />
+              <AvatarImage 
+                src={user?.user_metadata?.avatar_url} 
+                alt={user?.user_metadata?.name || 'User'} 
+              />
               <AvatarFallback>
                 {user?.user_metadata?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
               </AvatarFallback>

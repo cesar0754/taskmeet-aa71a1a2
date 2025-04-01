@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
@@ -55,7 +54,6 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       try {
         setLoading(true);
         
-        // First check if user is an owner of any organization
         const { data: ownedOrgs, error: ownedOrgsError } = await supabase
           .from('organizations')
           .select('*')
@@ -63,7 +61,6 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         if (ownedOrgsError) throw ownedOrgsError;
 
-        // Then check if user is a member of any organization
         const { data: memberOrgs, error: memberOrgsError } = await supabase
           .from('organization_members')
           .select('organization_id')
@@ -89,7 +86,6 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (selectedOrg) {
           setOrganization(selectedOrg);
           
-          // Fetch members
           const { data: orgMembers, error: membersError } = await supabase
             .from('organization_members')
             .select('*')
@@ -126,7 +122,6 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       setLoading(true);
       
-      // Create the organization
       const { data: newOrg, error: orgError } = await supabase
         .from('organizations')
         .insert([
@@ -137,7 +132,6 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (orgError) throw orgError;
 
-      // Add the creator as a member with admin role
       const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'Admin';
       
       const { error: memberError } = await supabase
@@ -156,7 +150,6 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       setOrganization(newOrg);
       
-      // Fetch members to update the state
       const { data: members, error: membersError } = await supabase
         .from('organization_members')
         .select('*')
@@ -223,12 +216,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       setLoading(true);
       
-      // Check if user already exists in the auth system
-      const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(email);
-      
-      // If user doesn't exist, we would need to implement invitation flow
-      // For now, let's assume the user is already registered
-      const userId = userData?.user?.id || 'pending';
+      const userId = 'pending';
 
       const { data: newMember, error } = await supabase
         .from('organization_members')
