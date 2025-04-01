@@ -3,14 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CreateOrganization from '@/components/organizations/CreateOrganization';
 import { useAuth } from '@/context/AuthContext';
-import { useOrganization } from '@/context/OrganizationContext';
 import { fetchUserOrganizations } from '@/services/organizationService';
 
 const CreateOrganizationPage: React.FC = () => {
   const { user } = useAuth();
-  const { organization, loading, createOrganization } = useOrganization();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const checkExistingOrganization = async () => {
@@ -20,6 +19,7 @@ const CreateOrganizationPage: React.FC = () => {
       }
 
       try {
+        setLoading(true);
         const existingOrg = await fetchUserOrganizations(user.id);
         if (existingOrg) {
           console.log('Usuário já possui organização, redirecionando para dashboard');
@@ -31,6 +31,7 @@ const CreateOrganizationPage: React.FC = () => {
         console.error('Erro ao verificar organizações existentes:', error);
       } finally {
         setChecking(false);
+        setLoading(false);
       }
     };
 
@@ -41,7 +42,7 @@ const CreateOrganizationPage: React.FC = () => {
     return null;
   }
 
-  if (checking || loading) {
+  if (checking) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>

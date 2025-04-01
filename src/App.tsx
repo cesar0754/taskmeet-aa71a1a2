@@ -23,13 +23,11 @@ const queryClient = new QueryClient();
 // Componente para agrupar rotas protegidas que precisam do OrganizationProvider
 const ProtectedRoutes = () => {
   return (
-    <OrganizationProvider>
-      <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/members" element={<MembersPage />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </OrganizationProvider>
+    <Routes>
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/members" element={<MembersPage />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 };
 
@@ -45,11 +43,21 @@ const App = () => {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
-              <Route path="/create-organization" element={<CreateOrganizationPage />} />
               <Route path="/accept-invite" element={<AcceptInvitePage />} />
               
+              {/* Rota de criação de organização dentro do OrganizationProvider */}
+              <Route path="/create-organization" element={
+                <OrganizationProvider>
+                  <CreateOrganizationPage />
+                </OrganizationProvider>
+              } />
+              
               {/* Rotas protegidas dentro do OrganizationProvider */}
-              <Route path="/*" element={<ProtectedRoutes />} />
+              <Route path="/*" element={
+                <OrganizationProvider>
+                  <ProtectedRoutes />
+                </OrganizationProvider>
+              } />
               
               <Route path="*" element={<NotFound />} />
             </Routes>

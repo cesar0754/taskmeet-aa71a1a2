@@ -10,6 +10,8 @@ import { useOrganization } from '@/context/OrganizationContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { createNewOrganization } from '@/services/organizationService';
+import { useAuth } from '@/context/AuthContext';
 
 const formSchema = z.object({
   name: z.string().min(3, { message: 'O nome da organização deve ter pelo menos 3 caracteres' }),
@@ -18,9 +20,11 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const CreateOrganization: React.FC = () => {
-  const { createOrganization, loading } = useOrganization();
+  const { setCurrentOrganization } = useOrganization();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [loading, setLoading] = React.useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -30,21 +34,26 @@ const CreateOrganization: React.FC = () => {
   });
 
   const onSubmit = async (values: FormValues) => {
+    if (!user) {
+      toast({
+        title: "Erro ao criar organização",
+        description: "Você precisa estar logado para criar uma organização.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      if (!createOrganization) {
-        toast({
-          title: "Erro ao criar organização",
-          description: "A função de criação de organização não está disponível.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
+      setLoading(true);
       console.log("Iniciando criação da organização:", values.name);
-      const result = await createOrganization(values.name);
+      
+      const result = await createNewOrganization(values.name, user.id);
       console.log("Resultado da criação:", result);
       
       if (result) {
+        // Atualizando o contexto com a nova organização
+        setCurrentOrganization(result);
+        
         toast({
           title: "Organização criada com sucesso",
           description: `A organização "${values.name}" foi criada e você foi adicionado como membro.`,
@@ -64,6 +73,8 @@ const CreateOrganization: React.FC = () => {
         description: "Ocorreu um erro ao criar a organização. Por favor, tente novamente.",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
