@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, UserAttributes } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
 
