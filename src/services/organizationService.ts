@@ -1,4 +1,3 @@
-
 import { supabase } from '../lib/supabase';
 import { Organization, Member } from '../types/organization';
 
@@ -178,7 +177,7 @@ export async function updateExistingMember(id: string, data: Partial<Member>): P
   }
 }
 
-export async function removeExistingMember(id: string): Promise<void> {
+export async function removeExistingMember(id: string): Promise<boolean> {
   try {
     console.log('Removendo membro:', id);
     
@@ -191,12 +190,12 @@ export async function removeExistingMember(id: string): Promise<void> {
       
     if (memberError) {
       console.error('Erro ao verificar membro:', memberError);
-      throw memberError;
+      return false;
     }
     
     if (!memberData) {
       console.error('Membro não encontrado com o ID:', id);
-      throw new Error('Membro não encontrado');
+      return false;
     }
     
     // Executa a operação de exclusão
@@ -207,12 +206,13 @@ export async function removeExistingMember(id: string): Promise<void> {
 
     if (error) {
       console.error('Erro ao remover membro:', error);
-      throw error;
+      return false;
     }
     
     console.log('Membro removido com sucesso');
+    return true;
   } catch (error) {
     console.error('Erro completo ao remover membro:', error);
-    throw error;
+    return false;
   }
 }
