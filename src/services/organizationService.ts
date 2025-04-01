@@ -124,6 +124,8 @@ export async function addNewMember(
   role: string
 ): Promise<Member> {
   try {
+    console.log('Adicionando novo membro:', { organizationId, email, name, role });
+    
     const { data, error } = await supabase
       .from('organization_members')
       .insert([
@@ -143,6 +145,11 @@ export async function addNewMember(
       throw error;
     }
 
+    console.log('Membro adicionado com sucesso:', data);
+    
+    // TODO: Enviar e-mail de convite para o membro com um link temporário
+    // Será implementado em uma futura iteração
+    
     return data;
   } catch (error) {
     console.error('Erro completo ao adicionar membro:', error);
@@ -152,6 +159,8 @@ export async function addNewMember(
 
 export async function updateExistingMember(id: string, data: Partial<Member>): Promise<void> {
   try {
+    console.log('Atualizando membro:', { id, data });
+    
     const { error } = await supabase
       .from('organization_members')
       .update(data)
@@ -161,6 +170,8 @@ export async function updateExistingMember(id: string, data: Partial<Member>): P
       console.error('Erro ao atualizar membro:', error);
       throw error;
     }
+    
+    console.log('Membro atualizado com sucesso');
   } catch (error) {
     console.error('Erro completo ao atualizar membro:', error);
     throw error;
@@ -169,6 +180,8 @@ export async function updateExistingMember(id: string, data: Partial<Member>): P
 
 export async function removeExistingMember(id: string): Promise<void> {
   try {
+    console.log('Removendo membro:', id);
+    
     const { error } = await supabase
       .from('organization_members')
       .delete()
@@ -178,6 +191,8 @@ export async function removeExistingMember(id: string): Promise<void> {
       console.error('Erro ao remover membro:', error);
       throw error;
     }
+    
+    console.log('Membro removido com sucesso');
   } catch (error) {
     console.error('Erro completo ao remover membro:', error);
     throw error;
