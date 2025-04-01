@@ -1,10 +1,9 @@
-
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { 
   fetchUserOrganizations, 
   fetchOrganizationMembers
-} from '@/services/organizationService';
+} from '@/services/organization';
 
 /**
  * Hook que gerencia o carregamento de dados da organização e seus membros

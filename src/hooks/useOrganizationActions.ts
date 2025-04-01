@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Organization, Member } from '@/types/organization';
@@ -6,7 +5,7 @@ import {
   createNewOrganization,
   updateExistingOrganization,
   fetchOrganizationMembers
-} from '@/services/organizationService';
+} from '@/services/organization';
 
 export function useOrganizationActions() {
   const [loading, setLoading] = useState(false);
