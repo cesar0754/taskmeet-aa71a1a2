@@ -74,10 +74,16 @@ export function useMemberActions() {
   const removeMember = async (id: string, setMembers: React.Dispatch<React.SetStateAction<Member[]>>) => {
     try {
       setLoading(true);
+      console.log('Iniciando remoção do membro com ID:', id);
       
       await removeExistingMember(id);
+      console.log('Membro removido no servidor, atualizando estado local');
       
-      setMembers(prev => prev.filter(member => member.id !== id));
+      setMembers(prev => {
+        const filtered = prev.filter(member => member.id !== id);
+        console.log('Membros após remoção:', filtered.length);
+        return filtered;
+      });
 
       toast({
         title: 'Membro removido',

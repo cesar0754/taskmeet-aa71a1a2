@@ -39,7 +39,11 @@ const MembersList: React.FC = () => {
     
     try {
       setIsDeleting(true);
+      console.log('Iniciando processo de exclusão do membro:', deleteConfirm.id);
+      
+      // Chama a função de remover membro do contexto
       await removeMember(deleteConfirm.id);
+      
       toast({
         title: 'Membro removido',
         description: 'O membro foi removido da organização com sucesso.',
@@ -113,7 +117,10 @@ const MembersList: React.FC = () => {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-red-600"
-                            onClick={() => setDeleteConfirm(member)}
+                            onClick={() => {
+                              console.log('Solicitando confirmação para excluir membro:', member.id);
+                              setDeleteConfirm(member);
+                            }}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Remover

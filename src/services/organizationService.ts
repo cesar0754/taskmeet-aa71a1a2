@@ -182,6 +182,24 @@ export async function removeExistingMember(id: string): Promise<void> {
   try {
     console.log('Removendo membro:', id);
     
+    // Verifica se o membro existe antes de tentar remover
+    const { data: memberData, error: memberError } = await supabase
+      .from('organization_members')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (memberError) {
+      console.error('Erro ao verificar membro:', memberError);
+      throw memberError;
+    }
+    
+    if (!memberData) {
+      console.error('Membro não encontrado com o ID:', id);
+      throw new Error('Membro não encontrado');
+    }
+    
+    // Executa a operação de exclusão
     const { error } = await supabase
       .from('organization_members')
       .delete()
