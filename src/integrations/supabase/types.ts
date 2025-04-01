@@ -76,7 +76,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_member_of_organization: {
+        Args: {
+          organization_id: string
+        }
+        Returns: boolean
+      }
+      is_owner_of_organization: {
+        Args: {
+          organization_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
