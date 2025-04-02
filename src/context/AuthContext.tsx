@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -29,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       try {
         // Configurar o listener para mudanças de autenticação PRIMEIRO
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+        const { data } = supabase.auth.onAuthStateChange((event, newSession) => {
           if (newSession) {
             setSession(newSession);
             setUser(newSession.user);
@@ -40,18 +39,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         
         // DEPOIS verificar se já existe uma sessão
-        const { data } = await supabase.auth.getSession();
-        setSession(data.session);
-        setUser(data.session?.user || null);
+        const { data: sessionData } = await supabase.auth.getSession();
+        setSession(sessionData.session);
+        setUser(sessionData.session?.user || null);
+        
+        return () => {
+          data.subscription.unsubscribe();
+        };
       } catch (error) {
         console.error('Erro ao inicializar a autenticação:', error);
       } finally {
         setLoading(false);
       }
-      
-      return () => {
-        subscription.unsubscribe();
-      };
     };
 
     initAuth();

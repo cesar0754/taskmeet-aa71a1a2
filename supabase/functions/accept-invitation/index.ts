@@ -10,7 +10,7 @@ const corsHeaders = {
 
 interface AcceptInvitationRequest {
   token: string;
-  userId: string;
+  userId?: string; // Opcional, pois podemos usar o token JWT do usuário atual
 }
 
 serve(async (req) => {
@@ -25,16 +25,51 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { token, userId } = await req.json() as AcceptInvitationRequest;
+    const { token, userId: providedUserId } = await req.json() as AcceptInvitationRequest;
 
-    if (!token || !userId) {
+    if (!token) {
       return new Response(
-        JSON.stringify({ error: "Token e ID do usuário são obrigatórios" }),
+        JSON.stringify({ error: "Token é obrigatório" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
+    }
+
+    // Se userId não for fornecido, obtenha o usuário atualmente autenticado
+    let userId = providedUserId;
+    
+    if (!userId || userId === 'default') {
+      // Extrair o token JWT da solicitação
+      const authHeader = req.headers.get('Authorization') || '';
+      const jwt = authHeader.replace('Bearer ', '');
+      
+      if (!jwt) {
+        return new Response(
+          JSON.stringify({ error: "Não autorizado. Faça login e tente novamente." }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      
+      // Verificar o token JWT e obter o ID do usuário
+      const { data: userData, error: authError } = await supabase.auth.getUser(jwt);
+      
+      if (authError || !userData.user) {
+        console.error("Erro ao verificar usuário:", authError);
+        return new Response(
+          JSON.stringify({ error: "Não autorizado. Faça login e tente novamente." }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      
+      userId = userData.user.id;
     }
 
     console.log(`Processando aceitação de convite. Token: ${token}, userId: ${userId}`);
