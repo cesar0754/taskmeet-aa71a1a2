@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useOrganization } from '@/context/OrganizationContext';
@@ -24,10 +24,10 @@ const MembersPage: React.FC = () => {
   }, []);
 
   // Reset do estado quando o diálogo é fechado
-  useEffect(() => {
+  React.useEffect(() => {
     if (!open) {
       // Se o diálogo foi fechado após sucesso, espera um pouco e 
-      // muda para aba de convites para mostrar o novo convite
+      // atualiza a página
       const timer = setTimeout(() => {
         refreshPage();
       }, 500);
