@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { getInvitationByToken, acceptInvitation, Invitation } from '@/services/invitation';
@@ -28,16 +30,20 @@ const AcceptInvitePage: React.FC = () => {
           return;
         }
         
+        console.log('[AcceptInvitePage] Buscando convite com token:', token);
         const invitationData = await getInvitationByToken(token);
+        
         if (!invitationData) {
+          console.error('[AcceptInvitePage] Convite não encontrado ou expirado');
           setError('Convite inválido ou expirado');
           setLoading(false);
           return;
         }
         
+        console.log('[AcceptInvitePage] Convite encontrado:', invitationData);
         setInvitation(invitationData);
       } catch (error) {
-        console.error('Erro ao buscar convite:', error);
+        console.error('[AcceptInvitePage] Erro ao buscar convite:', error);
         setError('Erro ao buscar detalhes do convite');
       } finally {
         setLoading(false);
@@ -59,25 +65,33 @@ const AcceptInvitePage: React.FC = () => {
         throw new Error('Token de convite não fornecido');
       }
       
+      console.log('[AcceptInvitePage] Aceitando convite com token:', token);
+      console.log('[AcceptInvitePage] ID do usuário:', user.id);
+      
       const result = await acceptInvitation(token, user.id);
       
       if (!result) {
+        console.error('[AcceptInvitePage] Resultado da aceitação é nulo');
         throw new Error('Erro ao aceitar convite');
       }
+      
+      console.log('[AcceptInvitePage] Convite aceito com sucesso:', result);
       
       toast({
         title: 'Convite aceito',
         description: 'Você agora é membro da organização!',
       });
       
+      // Redirecionar para o dashboard após sucesso
       navigate('/dashboard');
     } catch (error) {
-      console.error('Erro ao aceitar convite:', error);
+      console.error('[AcceptInvitePage] Erro detalhado ao aceitar convite:', error);
       toast({
         title: 'Erro ao aceitar convite',
         description: 'Houve um problema ao processar seu convite.',
         variant: 'destructive',
       });
+      setError('Houve um problema ao processar seu convite. Por favor, tente novamente mais tarde.');
     } finally {
       setAccepting(false);
     }
@@ -94,7 +108,9 @@ const AcceptInvitePage: React.FC = () => {
   if (!user) {
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
-    navigate(`/login?redirect=${encodeURIComponent(`/accept-invite?token=${token}`)}`);
+    const redirectPath = `/accept-invite?token=${token}`;
+    console.log('[AcceptInvitePage] Redirecionando para login com retorno para:', redirectPath);
+    navigate(`/login?redirect=${encodeURIComponent(redirectPath)}`);
     return null;
   }
 
@@ -110,9 +126,10 @@ const AcceptInvitePage: React.FC = () => {
           </CardHeader>
           <CardContent>
             {error ? (
-              <div className="text-center p-4 text-red-500">
-                <p>{error}</p>
-              </div>
+              <Alert variant="destructive" className="mb-4">
+                <AlertTitle>Erro</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             ) : invitation ? (
               <div className="space-y-4">
                 <div>

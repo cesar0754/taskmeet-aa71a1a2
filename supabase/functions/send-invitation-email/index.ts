@@ -43,11 +43,14 @@ const handler = async (req: Request): Promise<Response> => {
       password: Deno.env.get("SMTP_PASSWORD") || "",
       host: "smtp.taskmeet.com.br",
       port: 587,
-      tls: true,
-      timeout: 10000,
+      tls: {
+        ciphers: 'SSLv3',
+        rejectUnauthorized: false
+      },
+      timeout: 15000,
     });
 
-    // Criar conteúdo do e-mail HTML (mantido igual ao anterior)
+    // Criar conteúdo do e-mail HTML
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
         <h1 style="color: #3b82f6; margin-bottom: 20px;">Você foi convidado para o TaskMeet!</h1>
@@ -86,20 +89,31 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Enviando e-mail via SMTP...");
     
-    // Enviar o e-mail
-    const emailResult = await client.sendAsync(message);
-    console.log("Resposta do envio de e-mail:", emailResult);
+    try {
+      // Enviar o e-mail
+      const emailResult = await client.sendAsync(message);
+      console.log("Resposta do envio de e-mail:", emailResult);
 
-    // Retornando sucesso
-    return new Response(JSON.stringify({ success: true, messageId: emailResult.id }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
+      // Retornando sucesso
+      return new Response(JSON.stringify({ success: true, messageId: emailResult.id }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    } catch (emailError) {
+      console.error("Erro específico ao enviar e-mail:", emailError);
+      return new Response(
+        JSON.stringify({ error: "Erro ao enviar e-mail", details: emailError.message }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
   } catch (error: any) {
-    console.error("Erro ao enviar e-mail de convite:", error);
+    console.error("Erro ao processar requisição:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
