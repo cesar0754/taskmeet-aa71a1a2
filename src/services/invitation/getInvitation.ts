@@ -1,4 +1,3 @@
-
 import { supabase } from '../../lib/supabase';
 import { Invitation } from '../../types/invitation';
 
@@ -47,6 +46,8 @@ export async function getInvitationsByOrganization(organizationId: string): Prom
     }
 
     console.log('[getInvitationsByOrganization] Total de convites encontrados:', data?.length || 0);
+    console.log('[getInvitationsByOrganization] Convites:', data);
+    
     return data || [];
   } catch (error) {
     console.error('[getInvitationsByOrganization] Erro completo ao buscar convites:', error);
