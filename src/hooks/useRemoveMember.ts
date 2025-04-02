@@ -13,27 +13,33 @@ export function useRemoveMember() {
       setLoading(true);
       console.log('Iniciando remoção do membro com ID:', id);
       
+      // Primeiro atualizamos o estado localmente para uma resposta imediata na UI
+      setMembers((prevMembers) => {
+        console.log('Atualizando estado antes da chamada à API, removendo membro:', id);
+        return prevMembers.filter(member => member.id !== id);
+      });
+      
+      // Então executamos a operação no servidor
       const success = await removeExistingMember(id);
       
-      if (success) {
-        console.log('Membro removido no servidor, atualizando estado local');
-        
-        // Usando uma função callback para garantir que o estado seja atualizado corretamente
-        setMembers((prevMembers) => {
-          const updatedMembers = prevMembers.filter(member => member.id !== id);
-          console.log('Membros após remoção:', updatedMembers.length);
-          return updatedMembers;
-        });
-
+      if (!success) {
+        // Se a operação falhou no servidor, revertemos a mudança local
+        console.error('Falha na remoção do membro no servidor, revertendo estado local');
         toast({
-          title: 'Membro removido',
-          description: 'O membro foi removido da organização.',
+          title: 'Erro ao remover membro',
+          description: 'Houve um problema ao remover o membro da organização. Por favor, tente novamente.',
+          variant: 'destructive',
         });
-        
-        return true;
+        return false;
       }
       
-      return false;
+      console.log('Membro removido com sucesso no servidor e estado local');
+      toast({
+        title: 'Membro removido',
+        description: 'O membro foi removido da organização.',
+      });
+      
+      return true;
     } catch (error) {
       console.error('Erro ao remover membro:', error);
       toast({

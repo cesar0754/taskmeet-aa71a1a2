@@ -41,15 +41,12 @@ const MembersList: React.FC = () => {
       setIsDeleting(true);
       console.log('Iniciando processo de exclusão do membro:', deleteConfirm.id);
       
-      // Chama a função de remover membro do contexto
       const success = await removeMember(deleteConfirm.id);
       
       if (!success) {
-        toast({
-          title: 'Erro ao remover membro',
-          description: 'Houve um problema ao remover o membro da organização.',
-          variant: 'destructive',
-        });
+        console.error('Falha ao remover membro');
+      } else {
+        console.log('Membro removido com sucesso');
       }
     } catch (error) {
       console.error('Erro ao remover membro:', error);
