@@ -37,10 +37,17 @@ const handler = async (req: Request): Promise<Response> => {
     if (role === "admin") roleName = "Administrador";
     if (role === "editor") roleName = "Editor";
 
-    // Configurar cliente SMTP
+    // Pegar a senha do ambiente
+    const smtpPassword = Deno.env.get("SMTP_PASSWORD");
+    if (!smtpPassword) {
+      console.error("Erro: SMTP_PASSWORD não configurado");
+      throw new Error("Configuração de SMTP incompleta");
+    }
+
+    // Configurar cliente SMTP com senha atualizada
     const client = new SMTPClient({
       user: "support@taskmeet.com.br",
-      password: Deno.env.get("SMTP_PASSWORD") || "",
+      password: smtpPassword,
       host: "smtp.taskmeet.com.br",
       port: 587,
       tls: {
