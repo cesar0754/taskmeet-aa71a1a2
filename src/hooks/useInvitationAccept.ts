@@ -77,7 +77,7 @@ export const useInvitationAccept = (userId: string | undefined) => {
         } 
       });
       
-      // Estamos agora passando true para skipEmailCheck para permitir que qualquer usuário aceite o convite
+      // Sempre passamos true para skipEmailCheck para permitir que qualquer usuário aceite o convite
       const result = await acceptInvitation(token, userId, data.password, true);
       
       if (!result) {
