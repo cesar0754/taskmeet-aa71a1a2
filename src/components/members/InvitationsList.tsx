@@ -31,7 +31,11 @@ const InvitationsList: React.FC = () => {
       console.log('Carregando convites para organização:', organization.id);
       const invitationsList = await getInvitationsByOrganization(organization.id);
       console.log('Convites carregados:', invitationsList?.length || 0);
-      setInvitations(invitationsList);
+      if (invitationsList) {
+        setInvitations(invitationsList);
+      } else {
+        setInvitations([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar convites:', error);
       toast({
@@ -60,19 +64,22 @@ const InvitationsList: React.FC = () => {
       const success = await deleteInvitation(deleteConfirm.id);
       
       if (success) {
-        console.log('Atualizando lista de convites após remoção');
-        // Remove o convite da lista local
+        // Atualiza o estado local imediatamente
         setInvitations(prev => prev.filter(inv => inv.id !== deleteConfirm.id));
         
         toast({
           title: 'Convite removido',
           description: 'O convite foi removido com sucesso.',
         });
+      } else {
+        toast({
+          title: 'Erro ao remover convite',
+          description: 'Houve um problema ao remover o convite.',
+          variant: 'destructive',
+        });
         
-        // Força uma nova busca de dados após um breve delay
-        setTimeout(() => {
-          setRefreshKey(prev => prev + 1);
-        }, 500);
+        // Recarrega a lista de convites em caso de falha
+        setRefreshKey(prev => prev + 1);
       }
     } catch (error) {
       console.error('Erro ao remover convite:', error);
@@ -81,8 +88,10 @@ const InvitationsList: React.FC = () => {
         description: 'Houve um problema ao remover o convite.',
         variant: 'destructive',
       });
+      
+      // Recarrega a lista de convites em caso de erro
+      setRefreshKey(prev => prev + 1);
     } finally {
-      // Sempre limpe o estado de confirmação, independente do resultado
       setIsDeleting(false);
       setDeleteConfirm(null);
     }
@@ -215,7 +224,14 @@ const InvitationsList: React.FC = () => {
       </Card>
 
       {/* Diálogo de confirmação de exclusão */}
-      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+      <AlertDialog 
+        open={!!deleteConfirm} 
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) {
+            setDeleteConfirm(null);
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
@@ -224,7 +240,7 @@ const InvitationsList: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700"
               onClick={handleDelete}

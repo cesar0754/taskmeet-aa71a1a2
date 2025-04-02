@@ -15,9 +15,12 @@ export function useUpdateMember() {
       
       await updateExistingMember(id, data);
       
-      setMembers(prev => prev.map(member => 
-        member.id === id ? { ...member, ...data } : member
-      ));
+      // Usando uma função callback para garantir que o estado seja atualizado corretamente
+      setMembers(prevMembers => 
+        prevMembers.map(member => 
+          member.id === id ? { ...member, ...data } : member
+        )
+      );
 
       toast({
         title: 'Membro atualizado',

@@ -42,12 +42,15 @@ const MembersList: React.FC = () => {
       console.log('Iniciando processo de exclusão do membro:', deleteConfirm.id);
       
       // Chama a função de remover membro do contexto
-      await removeMember(deleteConfirm.id);
+      const success = await removeMember(deleteConfirm.id);
       
-      toast({
-        title: 'Membro removido',
-        description: 'O membro foi removido da organização com sucesso.',
-      });
+      if (!success) {
+        toast({
+          title: 'Erro ao remover membro',
+          description: 'Houve um problema ao remover o membro da organização.',
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       console.error('Erro ao remover membro:', error);
       toast({
@@ -137,7 +140,10 @@ const MembersList: React.FC = () => {
       </Card>
 
       {/* Diálogo de edição */}
-      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+      <Dialog open={isEditing} onOpenChange={(open) => {
+        setIsEditing(open);
+        if (!open) setEditMember(null);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Membro</DialogTitle>
@@ -158,7 +164,14 @@ const MembersList: React.FC = () => {
       </Dialog>
 
       {/* Diálogo de confirmação de exclusão */}
-      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+      <AlertDialog 
+        open={!!deleteConfirm} 
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) {
+            setDeleteConfirm(null);
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
@@ -167,7 +180,7 @@ const MembersList: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700"
               onClick={handleDelete}

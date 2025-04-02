@@ -18,10 +18,11 @@ export function useRemoveMember() {
       if (success) {
         console.log('Membro removido no servidor, atualizando estado local');
         
-        setMembers(prev => {
-          const filtered = prev.filter(member => member.id !== id);
-          console.log('Membros após remoção:', filtered.length);
-          return filtered;
+        // Usando uma função callback para garantir que o estado seja atualizado corretamente
+        setMembers((prevMembers) => {
+          const updatedMembers = prevMembers.filter(member => member.id !== id);
+          console.log('Membros após remoção:', updatedMembers.length);
+          return updatedMembers;
         });
 
         toast({
