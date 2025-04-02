@@ -4,13 +4,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 // Schema para o formulário de recuperação de senha
 const resetPasswordSchema = z.object({
@@ -21,7 +20,7 @@ type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { resetPassword } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,27 +39,15 @@ const ResetPasswordPage: React.FC = () => {
       
       console.log('[ResetPasswordPage] Enviando solicitação de recuperação de senha para:', values.email);
       
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/update-password`,
-      });
+      const result = await resetPassword(values.email);
 
-      if (resetError) {
-        console.error('[ResetPasswordPage] Erro ao enviar email de recuperação:', resetError);
+      if (!result) {
         setError('Erro ao enviar o email de recuperação. Por favor, tente novamente.');
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível enviar o email de recuperação de senha.',
-          variant: 'destructive',
-        });
         return;
       }
       
       console.log('[ResetPasswordPage] Email de recuperação enviado com sucesso');
       setSuccess(true);
-      toast({
-        title: 'Email enviado',
-        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
-      });
     } catch (err) {
       console.error('[ResetPasswordPage] Erro inesperado:', err);
       setError('Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.');

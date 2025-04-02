@@ -13,10 +13,7 @@ port = 54322
 enabled = true
 port = 54323
 
-# Disable Edge Functions dev detection
+# Todas as funções nativas de autenticação não precisam verificar JWT
 [functions]
 [functions.accept-invitation]
-verify_jwt = false
-
-[functions.send-invitation-email]
 verify_jwt = false

@@ -2,7 +2,6 @@
 import { supabase } from '../../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import { Invitation } from '../../types/invitation';
-import { sendInvitationEmail } from '../emailService';
 
 export async function createInvitation(
   organizationId: string,
@@ -58,17 +57,27 @@ export async function createInvitation(
     
     const organizationName = orgData?.name || 'TaskMeet';
     
-    // Preparar e enviar o e-mail de convite
+    // Preparar o link do convite
     const baseUrl = window.location.origin;
     const inviteLink = `${baseUrl}/accept-invite?token=${token}`;
     
-    await sendInvitationEmail(
-      email,
-      name,
-      organizationName,
-      inviteLink,
-      role
-    );
+    // Enviar e-mail usando o serviço nativo do Supabase
+    const { error: emailError } = await supabase.auth.admin.inviteUserByEmail(email, {
+      data: {
+        name,
+        organization_id: organizationId,
+        role,
+        token,
+        custom_invite_url: inviteLink,
+        organization_name: organizationName,
+      }
+    });
+    
+    if (emailError) {
+      console.error('Erro ao enviar e-mail de convite:', emailError);
+      // Se falhar, não lançamos erro, pois o convite já foi criado
+      // Podemos implementar futuramente um sistema de reenvio
+    }
     
     return data;
   } catch (error) {

@@ -4,13 +4,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 // Schema para o formulário de atualização de senha
 const updatePasswordSchema = z.object({
@@ -28,7 +27,7 @@ type UpdatePasswordFormValues = z.infer<typeof updatePasswordSchema>;
 
 const UpdatePasswordPage: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { updatePassword, session } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,31 +42,24 @@ const UpdatePasswordPage: React.FC = () => {
   });
 
   useEffect(() => {
-    // Verificar se há um hash na URL (para identificar se é um acesso via link de recuperação)
+    // Verificar se há uma sessão válida ou hash na URL 
+    // (para identificar se é um acesso via link de recuperação)
     const verifySession = async () => {
       try {
-        // O Supabase automaticamente processa os parâmetros na URL
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('[UpdatePasswordPage] Erro ao verificar sessão:', error);
-          setIsTokenValid(false);
-          setError('Link inválido ou expirado. Por favor, solicite um novo link de recuperação de senha.');
+        // Se temos uma sessão, o token é válido
+        if (session) {
+          setIsTokenValid(true);
           return;
         }
         
-        if (data.session) {
-          setIsTokenValid(true);
+        // Se não houver sessão ativa, verificamos se este é um link de recuperação de senha
+        const hash = window.location.hash;
+        if (!hash) {
+          setIsTokenValid(false);
+          setError('Acesso inválido. Por favor, solicite um link de recuperação de senha.');
         } else {
-          // Se não houver sessão ativa, verificamos se este é um link de recuperação de senha
-          const hash = window.location.hash;
-          if (!hash) {
-            setIsTokenValid(false);
-            setError('Acesso inválido. Por favor, solicite um link de recuperação de senha.');
-          } else {
-            // Se houver um hash, assumimos que é um link válido de redefinição de senha
-            setIsTokenValid(true);
-          }
+          // Se houver um hash, assumimos que é um link válido de redefinição de senha
+          setIsTokenValid(true);
         }
       } catch (err) {
         console.error('[UpdatePasswordPage] Erro inesperado ao verificar sessão:', err);
@@ -77,7 +69,7 @@ const UpdatePasswordPage: React.FC = () => {
     };
 
     verifySession();
-  }, []);
+  }, [session]);
 
   const onSubmit = async (values: UpdatePasswordFormValues) => {
     try {
@@ -86,27 +78,15 @@ const UpdatePasswordPage: React.FC = () => {
       
       console.log('[UpdatePasswordPage] Atualizando senha');
       
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: values.password
-      });
+      const result = await updatePassword(values.password);
 
-      if (updateError) {
-        console.error('[UpdatePasswordPage] Erro ao atualizar senha:', updateError);
+      if (!result) {
         setError('Erro ao atualizar a senha. Por favor, tente novamente.');
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível atualizar sua senha.',
-          variant: 'destructive',
-        });
         return;
       }
       
       console.log('[UpdatePasswordPage] Senha atualizada com sucesso');
       setSuccess(true);
-      toast({
-        title: 'Senha atualizada',
-        description: 'Sua senha foi atualizada com sucesso.',
-      });
       
       // Redirecionar para o login após 3 segundos
       setTimeout(() => {
