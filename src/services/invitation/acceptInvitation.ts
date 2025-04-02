@@ -5,7 +5,8 @@ import { Member } from '../../types/organization';
 
 export async function acceptInvitation(
   token: string, 
-  userId: string
+  userId: string,
+  password?: string
 ): Promise<Member | null> {
   try {
     console.log('[acceptInvitation] Iniciando aceitação de convite com token:', token);
@@ -18,6 +19,20 @@ export async function acceptInvitation(
     }
     
     console.log('[acceptInvitation] Convite encontrado:', invitation);
+
+    // Se o usuário forneceu uma senha, defina-a
+    if (password) {
+      console.log('[acceptInvitation] Definindo senha para o usuário');
+      const { error: passwordError } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (passwordError) {
+        console.error('[acceptInvitation] Erro ao definir senha:', passwordError);
+        throw new Error('Erro ao definir senha');
+      }
+      console.log('[acceptInvitation] Senha definida com sucesso');
+    }
 
     // Verificar se o usuário já é membro
     const { data: existingMember, error: checkError } = await supabase
