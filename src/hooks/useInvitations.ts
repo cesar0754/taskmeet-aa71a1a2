@@ -72,7 +72,8 @@ export const useDeleteInvitation = (refreshCallback: () => void) => {
           title: 'Convite removido',
           description: 'O convite foi removido com sucesso.',
         });
-        refreshCallback(); // Atualiza a lista após remoção bem-sucedida
+        // Força a atualização da lista após uma remoção bem-sucedida
+        refreshCallback();
       } else {
         toast({
           title: 'Erro ao remover convite',
@@ -80,7 +81,8 @@ export const useDeleteInvitation = (refreshCallback: () => void) => {
           variant: 'destructive',
         });
         
-        refreshCallback(); // Atualiza a lista mesmo em caso de erro
+        // Atualiza a lista mesmo em caso de erro para garantir sincronização
+        refreshCallback();
       }
     } catch (error) {
       console.error('Erro ao remover convite:', error);
@@ -90,7 +92,8 @@ export const useDeleteInvitation = (refreshCallback: () => void) => {
         variant: 'destructive',
       });
       
-      refreshCallback(); // Atualiza a lista mesmo em caso de erro
+      // Atualiza a lista mesmo em caso de erro para garantir sincronização
+      refreshCallback();
     } finally {
       setIsDeleting(false);
       setDeleteConfirm(null);
