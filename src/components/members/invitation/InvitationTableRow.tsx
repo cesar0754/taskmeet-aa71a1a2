@@ -4,7 +4,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Copy, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Copy, Trash2, RefreshCw } from 'lucide-react';
 import { Invitation } from '@/services/invitation';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -13,12 +13,16 @@ interface InvitationTableRowProps {
   invitation: Invitation;
   onCopyLink: (invitation: Invitation) => void;
   onDeleteRequest: (invitation: Invitation) => void;
+  onResend: (invitation: Invitation) => void;
+  isResending: boolean;
 }
 
 const InvitationTableRow: React.FC<InvitationTableRowProps> = ({ 
   invitation, 
   onCopyLink, 
-  onDeleteRequest 
+  onDeleteRequest,
+  onResend,
+  isResending
 }) => {
   return (
     <TableRow key={invitation.id}>
@@ -59,6 +63,13 @@ const InvitationTableRow: React.FC<InvitationTableRowProps> = ({
             <DropdownMenuItem onClick={() => onCopyLink(invitation)}>
               <Copy className="mr-2 h-4 w-4" />
               Copiar Link
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onResend(invitation)}
+              disabled={isResending}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Reenviar Convite
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-red-600"

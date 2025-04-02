@@ -8,12 +8,16 @@ interface InvitationsTableProps {
   invitations: Invitation[];
   onCopyLink: (invitation: Invitation) => void;
   onDeleteRequest: (invitation: Invitation) => void;
+  onResend: (invitation: Invitation) => void;
+  isResending: boolean;
 }
 
 const InvitationsTable: React.FC<InvitationsTableProps> = ({ 
   invitations, 
   onCopyLink, 
-  onDeleteRequest 
+  onDeleteRequest,
+  onResend,
+  isResending
 }) => {
   return (
     <Table>
@@ -41,6 +45,8 @@ const InvitationsTable: React.FC<InvitationsTableProps> = ({
               invitation={invitation}
               onCopyLink={onCopyLink}
               onDeleteRequest={onDeleteRequest}
+              onResend={onResend}
+              isResending={isResending}
             />
           ))
         )}

@@ -14,8 +14,10 @@ const InvitationsList: React.FC = () => {
     loading,
     deleteConfirm,
     isDeleting,
+    isResending,
     setDeleteConfirm,
     handleDelete,
+    handleResend,
     copyInviteLink
   } = useInvitations(organization?.id);
 
@@ -49,6 +51,8 @@ const InvitationsList: React.FC = () => {
             invitations={invitations}
             onCopyLink={copyInviteLink}
             onDeleteRequest={setDeleteConfirm}
+            onResend={handleResend}
+            isResending={isResending}
           />
         </CardContent>
       </Card>

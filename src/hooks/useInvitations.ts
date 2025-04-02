@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { deleteInvitation } from '@/services/invitation/deleteInvitation';
+import { deleteInvitation, resendInvitation } from '@/services/invitation';
 import { getInvitationsByOrganization } from '@/services/invitation/getInvitation';
 import { Invitation } from '@/types/invitation';
 
@@ -79,7 +78,6 @@ export const useDeleteInvitation = (refreshCallback: () => void) => {
           description: 'O convite foi removido com sucesso.',
         });
         
-        // Força a atualização da lista após uma remoção bem-sucedida
         refreshCallback();
       } else {
         console.error('[handleDelete] Falha ao remover convite, chamando refreshCallback mesmo assim');
@@ -89,7 +87,6 @@ export const useDeleteInvitation = (refreshCallback: () => void) => {
           variant: 'destructive',
         });
         
-        // Atualiza a lista mesmo em caso de erro para garantir sincronização
         refreshCallback();
       }
     } catch (error) {
@@ -100,7 +97,6 @@ export const useDeleteInvitation = (refreshCallback: () => void) => {
         variant: 'destructive',
       });
       
-      // Atualiza a lista mesmo em caso de erro para garantir sincronização
       refreshCallback();
     } finally {
       setIsDeleting(false);
@@ -113,6 +109,52 @@ export const useDeleteInvitation = (refreshCallback: () => void) => {
     isDeleting,
     setDeleteConfirm,
     handleDelete
+  };
+};
+
+// Hook para gerenciar o reenvio de convites
+export const useResendInvitation = (refreshCallback: () => void) => {
+  const { toast } = useToast();
+  const [isResending, setIsResending] = useState(false);
+
+  const handleResend = async (invitation: Invitation) => {
+    try {
+      setIsResending(true);
+      console.log('[handleResend] Reenviando convite com ID:', invitation.id);
+      
+      const success = await resendInvitation(invitation.id);
+      
+      if (success) {
+        console.log('[handleResend] Convite reenviado com sucesso');
+        toast({
+          title: 'Convite reenviado',
+          description: `O convite para ${invitation.email} foi reenviado com sucesso.`,
+        });
+      } else {
+        console.error('[handleResend] Falha ao reenviar convite');
+        toast({
+          title: 'Erro ao reenviar convite',
+          description: 'Houve um problema ao reenviar o convite.',
+          variant: 'destructive',
+        });
+      }
+      
+      refreshCallback();
+    } catch (error) {
+      console.error('[handleResend] Erro completo ao reenviar convite:', error);
+      toast({
+        title: 'Erro ao reenviar convite',
+        description: 'Houve um problema ao reenviar o convite.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  return {
+    isResending,
+    handleResend
   };
 };
 
@@ -148,6 +190,7 @@ export const useInvitationClipboard = () => {
 export const useInvitations = (organizationId: string | undefined) => {
   const { invitations, loading, refreshInvitations } = useLoadInvitations(organizationId);
   const { deleteConfirm, isDeleting, setDeleteConfirm, handleDelete } = useDeleteInvitation(refreshInvitations);
+  const { isResending, handleResend } = useResendInvitation(refreshInvitations);
   const { copyInviteLink } = useInvitationClipboard();
 
   return {
@@ -155,8 +198,10 @@ export const useInvitations = (organizationId: string | undefined) => {
     loading,
     deleteConfirm,
     isDeleting,
+    isResending,
     setDeleteConfirm,
     handleDelete,
+    handleResend,
     copyInviteLink,
     refreshInvitations
   };
