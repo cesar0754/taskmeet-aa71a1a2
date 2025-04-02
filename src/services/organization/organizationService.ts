@@ -28,6 +28,31 @@ export async function fetchUserOrganizations(userId: string): Promise<Organizati
 }
 
 /**
+ * Busca uma organização específica por ID
+ */
+export async function fetchOrganizationById(organizationId: string): Promise<Organization | null> {
+  try {
+    console.log("Buscando organização por ID:", organizationId);
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', organizationId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Erro ao buscar organização por ID:', error);
+      throw error;
+    }
+
+    console.log("Organização encontrada:", data);
+    return data;
+  } catch (error) {
+    console.error('Erro completo ao buscar organização por ID:', error);
+    throw error;
+  }
+}
+
+/**
  * Cria uma nova organização para um usuário
  */
 export async function createNewOrganization(name: string, userId: string): Promise<Organization | null> {

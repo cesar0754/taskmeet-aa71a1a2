@@ -91,8 +91,8 @@ export const useInvitationAccept = (userId: string | undefined) => {
         description: 'Você agora é membro da organização com sua senha definida!',
       });
       
-      // Redirecionar para o dashboard após sucesso
-      navigate('/dashboard');
+      // Redirecionar para o dashboard com parâmetro de organização
+      navigate(`/dashboard?org=${invitation.organization_id}`);
     } catch (error) {
       console.error('[useInvitationAccept] Erro detalhado ao aceitar convite:', error);
       toast({
