@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Invitation } from '@/types/invitation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -19,8 +18,8 @@ const InvitationDetails: React.FC<InvitationDetailsProps> = ({ invitation }) => 
   return (
     <div className="space-y-4">
       {isEmailMismatch && (
-        <Alert variant="warning" className="mb-4">
-          <AlertDescription className="text-amber-600">
+        <Alert variant="default" className="mb-4 border-yellow-400 bg-yellow-50 text-yellow-700">
+          <AlertDescription>
             O convite foi enviado para <strong>{invitation.email}</strong>, mas você está logado como <strong>{user?.email}</strong>. 
             Você ainda pode aceitar este convite, mas esteja ciente que estará aceitando em nome de outro usuário.
           </AlertDescription>
