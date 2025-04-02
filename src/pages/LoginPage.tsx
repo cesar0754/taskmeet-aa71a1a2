@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthLayout from '@/components/auth/AuthLayout';
 import LoginForm from '@/components/auth/LoginForm';
 import { useAuth } from '@/context/AuthContext';
@@ -10,11 +10,22 @@ import { useToast } from '@/hooks/use-toast';
 const LoginPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   useEffect(() => {
     const checkUserOrganization = async () => {
       if (!user) return;
+      
+      // Verificar se há um redirect na URL
+      const params = new URLSearchParams(location.search);
+      const redirectPath = params.get('redirect');
+      
+      if (redirectPath) {
+        console.log('[LoginPage] Redirecionando para:', redirectPath);
+        navigate(redirectPath);
+        return;
+      }
       
       try {
         const org = await fetchUserOrganizations(user.id);
@@ -37,7 +48,7 @@ const LoginPage: React.FC = () => {
     if (user) {
       checkUserOrganization();
     }
-  }, [user, navigate, toast]);
+  }, [user, navigate, toast, location.search]);
 
   return (
     <AuthLayout
