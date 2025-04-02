@@ -26,7 +26,7 @@ export async function sendInvitationEmail(
       return false;
     }
 
-    console.log('Resposta do serviço de e-mail:', data);
+    console.log('Resposta do serviço de e-mail SMTP:', data);
     return true;
   } catch (error) {
     console.error('Erro completo ao enviar e-mail de convite:', error);
