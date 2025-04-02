@@ -10,7 +10,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog';
-import { Invitation } from '@/services/invitation';
+import { Invitation } from '@/types/invitation';
 
 interface DeleteInvitationDialogProps {
   invitation: Invitation | null;

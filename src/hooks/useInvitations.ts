@@ -1,7 +1,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { getInvitationsByOrganization, deleteInvitation, Invitation } from '@/services/invitationService';
 import { useToast } from '@/hooks/use-toast';
+import { deleteInvitation } from '@/services/invitation/deleteInvitation';
+import { getInvitationsByOrganization } from '@/services/invitation/getInvitation';
+import { Invitation } from '@/types/invitation';
 
 // Hook dedicado para o carregamento de convites
 export const useLoadInvitations = (organizationId: string | undefined) => {
@@ -34,7 +36,7 @@ export const useLoadInvitations = (organizationId: string | undefined) => {
     } finally {
       setLoading(false);
     }
-  }, [organizationId, toast, refreshKey]); // Adicionei refreshKey como dependência explícita
+  }, [organizationId, toast, refreshKey]);
 
   const refreshInvitations = useCallback(() => {
     console.log('[refreshInvitations] Incrementando refreshKey para forçar recarga');
@@ -46,7 +48,7 @@ export const useLoadInvitations = (organizationId: string | undefined) => {
     if (organizationId) {
       loadInvitations();
     }
-  }, [organizationId, loadInvitations, refreshKey]); // refreshKey já estava aqui
+  }, [organizationId, loadInvitations, refreshKey]);
 
   return {
     invitations,
