@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -15,21 +14,18 @@ const AcceptInvitePage: React.FC = () => {
   const location = useLocation();
   
   useEffect(() => {
-    // Verificar se há um token na URL
     const params = new URLSearchParams(location.search);
     const inviteToken = params.get('token');
     
     console.log('[AcceptInvitePage] Token na URL:', inviteToken);
     console.log('[AcceptInvitePage] Estado de autenticação:', { user: !!user, authLoading });
     
-    // Se não há token, redirecionar para a página inicial
     if (!inviteToken) {
       console.error('[AcceptInvitePage] Nenhum token de convite encontrado na URL');
       navigate('/');
       return;
     }
     
-    // Se o usuário não está autenticado e carregamento terminou, redirecionar para login
     if (!authLoading && !user) {
       const redirectPath = `/accept-invite?token=${inviteToken}`;
       console.log('[AcceptInvitePage] Usuário não autenticado. Redirecionando para login com retorno para:', redirectPath);
@@ -55,7 +51,6 @@ const AcceptInvitePage: React.FC = () => {
     );
   }
 
-  // Se o usuário não estiver autenticado, mostrar mensagem (antes do redirecionamento)
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -65,7 +60,7 @@ const AcceptInvitePage: React.FC = () => {
             <CardDescription>Você precisa estar autenticado para acessar esta página</CardDescription>
           </CardHeader>
           <CardContent>
-            <Alert variant="warning" className="mb-4">
+            <Alert variant="destructive" className="mb-4">
               <AlertTitle>Não autenticado</AlertTitle>
               <AlertDescription>Redirecionando para a página de login...</AlertDescription>
             </Alert>
