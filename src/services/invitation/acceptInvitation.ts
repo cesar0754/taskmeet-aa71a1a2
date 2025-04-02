@@ -1,8 +1,18 @@
 
-import { supabase } from '../../lib/supabase';
 import { getInvitationByToken } from './getInvitation';
+import { updateUserPassword } from './userPasswordService';
+import { checkExistingMember } from './memberCheckService';
+import { addOrganizationMember } from './addMemberService';
+import { markInvitationAsUsed } from './updateInvitationService';
 import { Member } from '../../types/organization';
 
+/**
+ * Processo completo de aceitação de um convite
+ * @param token Token do convite
+ * @param userId ID do usuário aceitando o convite
+ * @param password Senha opcional a ser definida (para novos usuários)
+ * @returns O membro adicionado ou null em caso de erro
+ */
 export async function acceptInvitation(
   token: string, 
   userId: string,
@@ -22,82 +32,34 @@ export async function acceptInvitation(
 
     // Se o usuário forneceu uma senha, defina-a
     if (password) {
-      console.log('[acceptInvitation] Definindo senha para o usuário');
-      const { error: passwordError } = await supabase.auth.updateUser({
-        password: password
-      });
-
-      if (passwordError) {
-        console.error('[acceptInvitation] Erro ao definir senha:', passwordError);
-        throw new Error('Erro ao definir senha');
+      const passwordResult = await updateUserPassword(password);
+      if (!passwordResult.success) {
+        throw passwordResult.error || new Error('Erro ao definir senha');
       }
-      console.log('[acceptInvitation] Senha definida com sucesso');
     }
 
     // Verificar se o usuário já é membro
-    const { data: existingMember, error: checkError } = await supabase
-      .from('organization_members')
-      .select('*')
-      .eq('organization_id', invitation.organization_id)
-      .eq('user_id', userId)
-      .maybeSingle();
-      
-    if (checkError) {
-      console.error('[acceptInvitation] Erro ao verificar se o usuário já é membro:', checkError);
-    }
+    const existingMember = await checkExistingMember(invitation.organization_id, userId);
     
     if (existingMember) {
       console.log('[acceptInvitation] Usuário já é membro desta organização');
       
       // Marcar o convite como utilizado
-      const { error: updateError } = await supabase
-        .from('member_invitations')
-        .update({ used_at: new Date().toISOString() })
-        .eq('id', invitation.id);
-        
-      if (updateError) {
-        console.error('[acceptInvitation] Erro ao atualizar convite existente:', updateError);
-      }
+      await markInvitationAsUsed(invitation.id);
       
       return existingMember;
     }
 
-    // Iniciar uma transação para adicionar membro
-    const { data: memberData, error: memberError } = await supabase
-      .from('organization_members')
-      .insert([
-        { 
-          organization_id: invitation.organization_id, 
-          user_id: userId,
-          email: invitation.email,
-          name: invitation.name,
-          role: invitation.role,
-          pending: false
-        }
-      ])
-      .select()
-      .single();
-
-    if (memberError) {
-      console.error('[acceptInvitation] Erro ao adicionar membro:', memberError);
-      throw memberError;
+    // Adicionar novo membro
+    const memberData = await addOrganizationMember(invitation, userId);
+    if (!memberData) {
+      throw new Error('Erro ao adicionar membro');
     }
     
-    console.log('[acceptInvitation] Membro adicionado com sucesso:', memberData);
-
     // Marcar o convite como utilizado
-    const { error: updateError } = await supabase
-      .from('member_invitations')
-      .update({ used_at: new Date().toISOString() })
-      .eq('id', invitation.id);
-
-    if (updateError) {
-      console.error('[acceptInvitation] Erro ao atualizar convite:', updateError);
-      // Mesmo com erro ao atualizar convite, o membro foi adicionado
-      // Então retornamos sucesso, mas logamos o erro
-    }
+    await markInvitationAsUsed(invitation.id);
     
-    console.log('[acceptInvitation] Convite aceito e marcado como utilizado');
+    console.log('[acceptInvitation] Convite aceito com sucesso');
 
     return memberData;
   } catch (error) {
