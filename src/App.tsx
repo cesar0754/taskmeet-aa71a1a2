@@ -15,6 +15,8 @@ import CreateOrganizationPage from "./pages/CreateOrganizationPage";
 import Dashboard from "./pages/Dashboard";
 import MembersPage from "./pages/MembersPage";
 import AcceptInvitePage from "./pages/AcceptInvitePage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import UpdatePasswordPage from "./pages/UpdatePasswordPage";
 import NotFound from "./pages/NotFound";
 
 // Criando a instância de QueryClient fora da função de componente
@@ -44,6 +46,8 @@ const App = () => {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/accept-invite" element={<AcceptInvitePage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/update-password" element={<UpdatePasswordPage />} />
               
               {/* Rota de criação de organização dentro do OrganizationProvider */}
               <Route path="/create-organization" element={
