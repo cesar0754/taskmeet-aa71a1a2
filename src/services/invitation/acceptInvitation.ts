@@ -12,16 +12,19 @@ import { supabase } from '../../lib/supabase';
  * @param token Token do convite
  * @param userId ID do usuário aceitando o convite
  * @param password Senha opcional a ser definida (para novos usuários)
+ * @param skipEmailCheck Se verdadeiro, pula a verificação de correspondência de email
  * @returns O membro adicionado ou null em caso de erro
  */
 export async function acceptInvitation(
   token: string, 
   userId: string,
-  password?: string
+  password?: string,
+  skipEmailCheck: boolean = false
 ): Promise<Member | null> {
   try {
     console.log('[acceptInvitation] Iniciando aceitação de convite com token:', token);
     console.log('[acceptInvitation] ID do usuário:', userId);
+    console.log('[acceptInvitation] Pular verificação de email:', skipEmailCheck);
     
     // Verificar se o usuário existe
     const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -42,8 +45,8 @@ export async function acceptInvitation(
     console.log('[acceptInvitation] Convite encontrado:', invitation);
     console.log('[acceptInvitation] Email do convite:', invitation.email);
     
-    // Verificar se os emails coincidem
-    if (userData.user.email && invitation.email && 
+    // Verificar se os emails coincidem apenas se skipEmailCheck for falso
+    if (!skipEmailCheck && userData.user.email && invitation.email && 
         userData.user.email.toLowerCase() !== invitation.email.toLowerCase()) {
       console.error('[acceptInvitation] O email do usuário não coincide com o email do convite', {
         userEmail: userData.user.email,
