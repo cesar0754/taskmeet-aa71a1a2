@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   AlertDialog, 
@@ -10,7 +9,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog';
-import { Invitation } from '@/services/invitationService';
+import { Invitation } from '@/services/invitation';
 
 interface DeleteInvitationDialogProps {
   invitation: Invitation | null;

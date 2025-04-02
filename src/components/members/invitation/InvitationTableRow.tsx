@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, Copy, Trash2 } from 'lucide-react';
-import { Invitation } from '@/services/invitationService';
+import { Invitation } from '@/services/invitation';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

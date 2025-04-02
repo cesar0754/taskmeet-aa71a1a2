@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Invitation, getInvitationsByOrganization, deleteInvitation } from '@/services/invitationService';
+import { getInvitationsByOrganization, deleteInvitation, Invitation } from '@/services/invitation';
 import { useToast } from '@/hooks/use-toast';
 
 export const useInvitations = (organizationId: string | undefined) => {

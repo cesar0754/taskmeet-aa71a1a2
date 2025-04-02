@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Invitation } from '@/services/invitationService';
+import { Invitation } from '@/services/invitation';
 import InvitationTableRow from './InvitationTableRow';
 
 interface InvitationsTableProps {

@@ -1,12 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { getInvitationByToken, acceptInvitation } from '@/services/invitationService';
-import { Invitation } from '@/services/invitationService';
+import { getInvitationByToken, acceptInvitation, Invitation } from '@/services/invitation';
 
 const AcceptInvitePage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -72,7 +70,6 @@ const AcceptInvitePage: React.FC = () => {
         description: 'Você agora é membro da organização!',
       });
       
-      // Redirecionar para o dashboard
       navigate('/dashboard');
     } catch (error) {
       console.error('Erro ao aceitar convite:', error);
@@ -95,7 +92,6 @@ const AcceptInvitePage: React.FC = () => {
   }
 
   if (!user) {
-    // Redirecionar para a página de login, preservando o token na URL
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
     navigate(`/login?redirect=${encodeURIComponent(`/accept-invite?token=${token}`)}`);
