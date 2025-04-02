@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useOrganization } from '@/context/OrganizationContext';
@@ -18,9 +18,10 @@ const MembersPage: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Função para forçar uma atualização da página
-  const refreshPage = () => {
+  const refreshPage = useCallback(() => {
+    console.log('Atualizando página de membros...');
     setRefreshKey(prev => prev + 1);
-  };
+  }, []);
 
   // Reset do estado quando o diálogo é fechado
   useEffect(() => {
@@ -33,7 +34,7 @@ const MembersPage: React.FC = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [open]);
+  }, [open, refreshPage]);
 
   if (loading) {
     return (

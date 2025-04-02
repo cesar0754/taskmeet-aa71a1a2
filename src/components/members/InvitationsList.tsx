@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -20,9 +19,8 @@ const InvitationsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<Invitation | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0); // Chave para forçar a atualização
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Refatorando o carregamento para usar useCallback
   const loadInvitations = useCallback(async () => {
     if (!organization) return;
     
@@ -61,12 +59,13 @@ const InvitationsList: React.FC = () => {
       setIsDeleting(true);
       console.log('Removendo convite com ID:', deleteConfirm.id);
       
+      setInvitations(prevInvitations => 
+        prevInvitations.filter(inv => inv.id !== deleteConfirm.id)
+      );
+      
       const success = await deleteInvitation(deleteConfirm.id);
       
       if (success) {
-        // Atualiza o estado local imediatamente
-        setInvitations(prev => prev.filter(inv => inv.id !== deleteConfirm.id));
-        
         toast({
           title: 'Convite removido',
           description: 'O convite foi removido com sucesso.',
@@ -74,12 +73,11 @@ const InvitationsList: React.FC = () => {
       } else {
         toast({
           title: 'Erro ao remover convite',
-          description: 'Houve um problema ao remover o convite.',
+          description: 'Houve um problema ao remover o convite. A lista será atualizada.',
           variant: 'destructive',
         });
         
-        // Recarrega a lista de convites em caso de falha
-        setRefreshKey(prev => prev + 1);
+        loadInvitations();
       }
     } catch (error) {
       console.error('Erro ao remover convite:', error);
@@ -89,8 +87,7 @@ const InvitationsList: React.FC = () => {
         variant: 'destructive',
       });
       
-      // Recarrega a lista de convites em caso de erro
-      setRefreshKey(prev => prev + 1);
+      loadInvitations();
     } finally {
       setIsDeleting(false);
       setDeleteConfirm(null);
@@ -98,9 +95,7 @@ const InvitationsList: React.FC = () => {
   };
 
   const copyInviteLink = (invitation: Invitation) => {
-    // URL base da aplicação
     const baseUrl = window.location.origin;
-    // Link de convite com o token
     const inviteLink = `${baseUrl}/accept-invite?token=${invitation.token}`;
     
     navigator.clipboard.writeText(inviteLink).then(
@@ -120,7 +115,7 @@ const InvitationsList: React.FC = () => {
     );
   };
 
-  if (loading) {
+  if (loading && invitations.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -223,7 +218,6 @@ const InvitationsList: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Diálogo de confirmação de exclusão */}
       <AlertDialog 
         open={!!deleteConfirm} 
         onOpenChange={(open) => {
