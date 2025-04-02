@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   CheckSquare, 
@@ -32,9 +32,15 @@ const AppSidebar: React.FC = () => {
   const { signOut } = useAuth();
   const { organization } = useOrganization();
   const location = useLocation();
+  const navigate = useNavigate();
   
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
   };
 
   const links = [
@@ -92,15 +98,12 @@ const AppSidebar: React.FC = () => {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton 
-                asChild 
                 tooltip="Sair"
                 className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
                 onClick={handleSignOut}
               >
-                <button>
-                  <LogOut size={20} />
-                  <span>Sair</span>
-                </button>
+                <LogOut size={20} />
+                <span>Sair</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
