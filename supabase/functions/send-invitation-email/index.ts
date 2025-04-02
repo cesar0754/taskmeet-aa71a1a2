@@ -47,7 +47,7 @@ const handler = async (req: Request): Promise<Response> => {
       timeout: 10000,
     });
 
-    // Criar conteúdo do e-mail HTML
+    // Criar conteúdo do e-mail HTML (mantido igual ao anterior)
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
         <h1 style="color: #3b82f6; margin-bottom: 20px;">Você foi convidado para o TaskMeet!</h1>
@@ -111,3 +111,4 @@ const handler = async (req: Request): Promise<Response> => {
 };
 
 serve(handler);
+
