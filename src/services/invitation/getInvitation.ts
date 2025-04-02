@@ -32,6 +32,8 @@ export async function getInvitationByToken(token: string): Promise<Invitation | 
 
 export async function getInvitationsByOrganization(organizationId: string): Promise<Invitation[]> {
   try {
+    console.log('[getInvitationsByOrganization] Buscando convites para organização:', organizationId);
+    
     const { data, error } = await supabase
       .from('member_invitations')
       .select('*')
@@ -40,13 +42,14 @@ export async function getInvitationsByOrganization(organizationId: string): Prom
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Erro ao buscar convites da organização:', error);
+      console.error('[getInvitationsByOrganization] Erro ao buscar convites da organização:', error);
       throw error;
     }
 
+    console.log('[getInvitationsByOrganization] Total de convites encontrados:', data?.length || 0);
     return data || [];
   } catch (error) {
-    console.error('Erro completo ao buscar convites:', error);
+    console.error('[getInvitationsByOrganization] Erro completo ao buscar convites:', error);
     return [];
   }
 }

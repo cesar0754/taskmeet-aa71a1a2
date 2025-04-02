@@ -15,16 +15,17 @@ export const useLoadInvitations = (organizationId: string | undefined) => {
     
     try {
       setLoading(true);
-      console.log('Carregando convites para organização:', organizationId);
+      console.log('[loadInvitations] Carregando convites para organização:', organizationId, 'refreshKey:', refreshKey);
       const invitationsList = await getInvitationsByOrganization(organizationId);
-      console.log('Convites carregados:', invitationsList?.length || 0);
+      console.log('[loadInvitations] Convites carregados:', invitationsList?.length || 0, 'dados:', invitationsList);
+      
       if (invitationsList) {
         setInvitations(invitationsList);
       } else {
         setInvitations([]);
       }
     } catch (error) {
-      console.error('Erro ao carregar convites:', error);
+      console.error('[loadInvitations] Erro ao carregar convites:', error);
       toast({
         title: 'Erro ao carregar convites',
         description: 'Não foi possível carregar a lista de convites.',
@@ -33,17 +34,19 @@ export const useLoadInvitations = (organizationId: string | undefined) => {
     } finally {
       setLoading(false);
     }
-  }, [organizationId, toast]);
+  }, [organizationId, toast, refreshKey]); // Adicionei refreshKey como dependência explícita
 
   const refreshInvitations = useCallback(() => {
+    console.log('[refreshInvitations] Incrementando refreshKey para forçar recarga');
     setRefreshKey(prev => prev + 1);
   }, []);
 
   useEffect(() => {
+    console.log('[useEffect] Efeito disparado, organizationId:', organizationId, 'refreshKey:', refreshKey);
     if (organizationId) {
       loadInvitations();
     }
-  }, [organizationId, loadInvitations, refreshKey]);
+  }, [organizationId, loadInvitations, refreshKey]); // refreshKey já estava aqui
 
   return {
     invitations,
@@ -63,18 +66,21 @@ export const useDeleteInvitation = (refreshCallback: () => void) => {
     
     try {
       setIsDeleting(true);
-      console.log('Removendo convite com ID:', deleteConfirm.id);
+      console.log('[handleDelete] Removendo convite com ID:', deleteConfirm.id);
       
       const success = await deleteInvitation(deleteConfirm.id);
       
       if (success) {
+        console.log('[handleDelete] Convite removido com sucesso, chamando refreshCallback');
         toast({
           title: 'Convite removido',
           description: 'O convite foi removido com sucesso.',
         });
+        
         // Força a atualização da lista após uma remoção bem-sucedida
         refreshCallback();
       } else {
+        console.error('[handleDelete] Falha ao remover convite, chamando refreshCallback mesmo assim');
         toast({
           title: 'Erro ao remover convite',
           description: 'Houve um problema ao remover o convite. A lista será atualizada.',
@@ -85,7 +91,7 @@ export const useDeleteInvitation = (refreshCallback: () => void) => {
         refreshCallback();
       }
     } catch (error) {
-      console.error('Erro ao remover convite:', error);
+      console.error('[handleDelete] Erro completo ao remover convite:', error);
       toast({
         title: 'Erro ao remover convite',
         description: 'Houve um problema ao remover o convite.',
