@@ -1,14 +1,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { getInvitationsByOrganization, deleteInvitation, Invitation } from '@/services/invitation';
+import { getInvitationsByOrganization, deleteInvitation, Invitation } from '@/services/invitationService';
 import { useToast } from '@/hooks/use-toast';
 
-export const useInvitations = (organizationId: string | undefined) => {
+// Hook dedicado para o carregamento de convites
+export const useLoadInvitations = (organizationId: string | undefined) => {
   const { toast } = useToast();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deleteConfirm, setDeleteConfirm] = useState<Invitation | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const loadInvitations = useCallback(async () => {
@@ -46,17 +45,25 @@ export const useInvitations = (organizationId: string | undefined) => {
     }
   }, [organizationId, loadInvitations, refreshKey]);
 
+  return {
+    invitations,
+    loading,
+    refreshInvitations
+  };
+};
+
+// Hook dedicado para a remoção de convites
+export const useDeleteInvitation = (refreshCallback: () => void) => {
+  const { toast } = useToast();
+  const [deleteConfirm, setDeleteConfirm] = useState<Invitation | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleDelete = async () => {
     if (!deleteConfirm) return;
     
     try {
       setIsDeleting(true);
       console.log('Removendo convite com ID:', deleteConfirm.id);
-      
-      // Atualiza a UI imediatamente
-      setInvitations(prevInvitations => 
-        prevInvitations.filter(inv => inv.id !== deleteConfirm.id)
-      );
       
       const success = await deleteInvitation(deleteConfirm.id);
       
@@ -65,6 +72,7 @@ export const useInvitations = (organizationId: string | undefined) => {
           title: 'Convite removido',
           description: 'O convite foi removido com sucesso.',
         });
+        refreshCallback(); // Atualiza a lista após remoção bem-sucedida
       } else {
         toast({
           title: 'Erro ao remover convite',
@@ -72,7 +80,7 @@ export const useInvitations = (organizationId: string | undefined) => {
           variant: 'destructive',
         });
         
-        loadInvitations();
+        refreshCallback(); // Atualiza a lista mesmo em caso de erro
       }
     } catch (error) {
       console.error('Erro ao remover convite:', error);
@@ -82,14 +90,26 @@ export const useInvitations = (organizationId: string | undefined) => {
         variant: 'destructive',
       });
       
-      loadInvitations();
+      refreshCallback(); // Atualiza a lista mesmo em caso de erro
     } finally {
       setIsDeleting(false);
       setDeleteConfirm(null);
     }
   };
 
-  const copyInviteLink = (invitation: Invitation) => {
+  return {
+    deleteConfirm,
+    isDeleting,
+    setDeleteConfirm,
+    handleDelete
+  };
+};
+
+// Hook para gerenciar o clipboard
+export const useInvitationClipboard = () => {
+  const { toast } = useToast();
+
+  const copyInviteLink = useCallback((invitation: Invitation) => {
     const baseUrl = window.location.origin;
     const inviteLink = `${baseUrl}/accept-invite?token=${invitation.token}`;
     
@@ -108,7 +128,16 @@ export const useInvitations = (organizationId: string | undefined) => {
         });
       }
     );
-  };
+  }, [toast]);
+
+  return { copyInviteLink };
+};
+
+// Hook principal que combina os hooks anteriores
+export const useInvitations = (organizationId: string | undefined) => {
+  const { invitations, loading, refreshInvitations } = useLoadInvitations(organizationId);
+  const { deleteConfirm, isDeleting, setDeleteConfirm, handleDelete } = useDeleteInvitation(refreshInvitations);
+  const { copyInviteLink } = useInvitationClipboard();
 
   return {
     invitations,

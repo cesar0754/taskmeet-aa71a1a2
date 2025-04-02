@@ -6,6 +6,8 @@ export {
   getInvitationByToken,
   getInvitationsByOrganization,
   acceptInvitation,
-  deleteInvitation,
-  Invitation
+  deleteInvitation
 } from './invitation';
+
+// Corrigindo a exportação do tipo usando 'export type'
+export type { Invitation } from './invitation';
