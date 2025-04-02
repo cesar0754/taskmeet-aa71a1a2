@@ -10,6 +10,13 @@ export async function updateUserPassword(password: string): Promise<{ success: b
   try {
     console.log('[updateUserPassword] Definindo senha para o usuário');
     
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !userData.user) {
+      console.error('[updateUserPassword] Erro ao obter usuário atual:', userError);
+      return { success: false, error: new Error('Erro ao obter usuário atual') };
+    }
+    
     const { error } = await supabase.auth.updateUser({
       password: password
     });
@@ -20,6 +27,18 @@ export async function updateUserPassword(password: string): Promise<{ success: b
     }
     
     console.log('[updateUserPassword] Senha definida com sucesso');
+    
+    // Após atualizar a senha, marcamos o usuário como não sendo mais seu primeiro login
+    const { error: updateError } = await supabase
+      .from('organization_members')
+      .update({ is_first_login: false })
+      .eq('user_id', userData.user.id);
+      
+    if (updateError) {
+      console.error('[updateUserPassword] Erro ao atualizar status de primeiro login:', updateError);
+      // Não falharemos aqui, já que a senha foi atualizada com sucesso
+    }
+    
     return { success: true };
   } catch (error) {
     console.error('[updateUserPassword] Erro ao definir senha:', error);
