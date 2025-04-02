@@ -23,6 +23,7 @@ export const useInvitationAccept = (userId: string | undefined) => {
         const inviteToken = params.get('token');
         
         if (!inviteToken) {
+          console.error('[useInvitationAccept] Token de convite não fornecido');
           setError('Token de convite não fornecido');
           setLoading(false);
           return;
@@ -33,7 +34,7 @@ export const useInvitationAccept = (userId: string | undefined) => {
         const invitationData = await getInvitationByToken(inviteToken);
         
         if (!invitationData) {
-          console.error('[useInvitationAccept] Convite não encontrado ou expirado');
+          console.error('[useInvitationAccept] Convite não encontrado ou expirado. Token:', inviteToken);
           setError('Convite inválido ou expirado');
           setLoading(false);
           return;
@@ -57,12 +58,24 @@ export const useInvitationAccept = (userId: string | undefined) => {
   };
 
   const handlePasswordSubmit = async (data: PasswordFormValues) => {
-    if (!userId || !invitation || !token) return;
+    if (!userId || !invitation || !token) {
+      console.error('[useInvitationAccept] Dados faltantes:', { userId, hasInvitation: !!invitation, token });
+      setError('Dados incompletos para aceitar o convite');
+      return;
+    }
 
     try {
       setAccepting(true);
       
-      console.log('[useInvitationAccept] Aceitando convite com token e definindo senha');
+      console.log('[useInvitationAccept] Aceitando convite com token:', token);
+      console.log('[useInvitationAccept] Dados de usuário e convite:', { 
+        userId, 
+        invitation: { 
+          id: invitation.id, 
+          email: invitation.email, 
+          organization_id: invitation.organization_id 
+        } 
+      });
       
       const result = await acceptInvitation(token, userId, data.password);
       

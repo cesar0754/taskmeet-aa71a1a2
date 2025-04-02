@@ -4,28 +4,46 @@ import { Invitation } from '../../types/invitation';
 
 export async function getInvitationByToken(token: string): Promise<Invitation | null> {
   try {
+    console.log('[getInvitationByToken] Iniciando busca por token:', token);
+    
+    // Verificar se o token está em formato válido
+    if (!token || token.trim() === '') {
+      console.error('[getInvitationByToken] Token inválido ou vazio:', token);
+      return null;
+    }
+    
     const { data, error } = await supabase
       .from('member_invitations')
       .select('*')
       .eq('token', token)
-      .is('used_at', null)
-      .single();
-
+      .is('used_at', null);
+      
     if (error) {
-      console.error('Erro ao buscar convite:', error);
+      console.error('[getInvitationByToken] Erro do Supabase ao buscar convite:', error);
       return null;
     }
-
+    
+    console.log('[getInvitationByToken] Resultados encontrados:', data?.length);
+    
+    if (!data || data.length === 0) {
+      console.log('[getInvitationByToken] Nenhum convite encontrado com o token fornecido');
+      return null;
+    }
+    
+    // Pegar o primeiro convite (deveria ser único pelo token)
+    const invitation = data[0];
+    
     // Verificar se o convite expirou
-    const expiresAt = new Date(data.expires_at);
+    const expiresAt = new Date(invitation.expires_at);
     if (expiresAt < new Date()) {
-      console.error('Convite expirado');
+      console.error('[getInvitationByToken] Convite expirado. Expiração:', expiresAt, 'Agora:', new Date());
       return null;
     }
 
-    return data;
+    console.log('[getInvitationByToken] Convite válido encontrado:', invitation);
+    return invitation;
   } catch (error) {
-    console.error('Erro ao buscar convite por token:', error);
+    console.error('[getInvitationByToken] Erro ao buscar convite por token:', error);
     return null;
   }
 }

@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -12,6 +12,30 @@ import PasswordSetupForm from '@/components/invitation/PasswordSetupForm';
 const AcceptInvitePage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Verificar se há um token na URL
+    const params = new URLSearchParams(location.search);
+    const inviteToken = params.get('token');
+    
+    console.log('[AcceptInvitePage] Token na URL:', inviteToken);
+    console.log('[AcceptInvitePage] Estado de autenticação:', { user: !!user, authLoading });
+    
+    // Se não há token, redirecionar para a página inicial
+    if (!inviteToken) {
+      console.error('[AcceptInvitePage] Nenhum token de convite encontrado na URL');
+      navigate('/');
+      return;
+    }
+    
+    // Se o usuário não está autenticado e carregamento terminou, redirecionar para login
+    if (!authLoading && !user) {
+      const redirectPath = `/accept-invite?token=${inviteToken}`;
+      console.log('[AcceptInvitePage] Usuário não autenticado. Redirecionando para login com retorno para:', redirectPath);
+      navigate(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+    }
+  }, [user, authLoading, navigate, location.search]);
   
   const {
     invitation,
@@ -31,14 +55,24 @@ const AcceptInvitePage: React.FC = () => {
     );
   }
 
-  // Redirecionar para login se o usuário não estiver autenticado
+  // Se o usuário não estiver autenticado, mostrar mensagem (antes do redirecionamento)
   if (!user) {
-    const params = new URLSearchParams(window.location.search);
-    const inviteToken = params.get('token');
-    const redirectPath = `/accept-invite?token=${inviteToken}`;
-    console.log('[AcceptInvitePage] Redirecionando para login com retorno para:', redirectPath);
-    navigate(`/login?redirect=${encodeURIComponent(redirectPath)}`);
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Acesso Restrito</CardTitle>
+            <CardDescription>Você precisa estar autenticado para acessar esta página</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert variant="warning" className="mb-4">
+              <AlertTitle>Não autenticado</AlertTitle>
+              <AlertDescription>Redirecionando para a página de login...</AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
