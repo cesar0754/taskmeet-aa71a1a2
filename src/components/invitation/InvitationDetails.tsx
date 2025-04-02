@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Invitation } from '@/types/invitation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
