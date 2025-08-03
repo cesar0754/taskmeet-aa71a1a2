@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 /**
@@ -32,8 +32,6 @@ export const useSignIn = () => {
         title: 'Login bem-sucedido',
         description: 'Bem-vindo de volta!',
       });
-
-      return data;
     } catch (error) {
       console.error('Error signing in:', error);
       throw error;

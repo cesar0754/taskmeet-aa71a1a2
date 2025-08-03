@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 /**
@@ -37,8 +37,6 @@ export const useSignUp = () => {
         title: 'Conta criada com sucesso',
         description: 'Agora você pode criar sua organização.',
       });
-
-      return data;
     } catch (error) {
       console.error('Error signing up:', error);
       throw error;
