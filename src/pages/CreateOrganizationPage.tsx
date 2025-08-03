@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CreateOrganization from '@/components/organizations/CreateOrganization';
 import { useAuth } from '@/context/AuthContext';
-import { fetchUserOrganizations } from '@/services/organizationService';
+import { fetchUserOrganizations } from '@/services/organization/organizationService';
 
 const CreateOrganizationPage: React.FC = () => {
   const { user } = useAuth();

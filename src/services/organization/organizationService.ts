@@ -1,6 +1,6 @@
 
-import { supabase } from '../../lib/supabase';
-import { Organization } from '../../types/organization';
+import { supabase } from '@/integrations/supabase/client';
+import { Organization, Member } from '../../types/organization';
 
 /**
  * Busca as organizações de um usuário específico
@@ -8,7 +8,7 @@ import { Organization } from '../../types/organization';
 export async function fetchUserOrganizations(userId: string): Promise<Organization | null> {
   try {
     console.log("Buscando organizações para o usuário:", userId);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('organizations')
       .select('*')
       .eq('owner_id', userId)
@@ -33,7 +33,7 @@ export async function fetchUserOrganizations(userId: string): Promise<Organizati
 export async function fetchOrganizationById(organizationId: string): Promise<Organization | null> {
   try {
     console.log("Buscando organização por ID:", organizationId);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('organizations')
       .select('*')
       .eq('id', organizationId)
@@ -61,7 +61,7 @@ export async function createNewOrganization(name: string, userId: string): Promi
     console.log('Criando organização - UserID:', userId);
 
     // 1. Criar a organização
-    const { data: newOrg, error: orgError } = await supabase
+    const { data: newOrg, error: orgError } = await (supabase as any)
       .from('organizations')
       .insert([
         { name, owner_id: userId }
@@ -83,7 +83,7 @@ export async function createNewOrganization(name: string, userId: string): Promi
     
     console.log('Dados do usuário para adicionar como membro:', { userName, userEmail });
 
-    const { data: memberData, error: memberError } = await supabase
+    const { data: memberData, error: memberError } = await (supabase as any)
       .from('organization_members')
       .insert([
         { 
@@ -115,7 +115,7 @@ export async function createNewOrganization(name: string, userId: string): Promi
  */
 export async function updateExistingOrganization(id: string, data: Partial<Organization>): Promise<void> {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('organizations')
       .update(data)
       .eq('id', id);
@@ -126,6 +126,30 @@ export async function updateExistingOrganization(id: string, data: Partial<Organ
     }
   } catch (error) {
     console.error('Erro completo ao atualizar organização:', error);
+    throw error;
+  }
+}
+
+/**
+ * Busca membros de uma organização específica
+ */
+export async function fetchOrganizationMembers(organizationId: string): Promise<Member[]> {
+  try {
+    console.log("Buscando membros para a organização:", organizationId);
+    const { data, error } = await (supabase as any)
+      .from('organization_members')
+      .select('*')
+      .eq('organization_id', organizationId);
+
+    if (error) {
+      console.error('Erro ao buscar membros da organização:', error);
+      throw error;
+    }
+
+    console.log("Membros encontrados:", data);
+    return data || [];
+  } catch (error) {
+    console.error('Erro completo ao buscar membros:', error);
     throw error;
   }
 }

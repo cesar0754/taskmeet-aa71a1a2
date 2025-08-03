@@ -1,30 +1,7 @@
 
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Member } from '../../types/organization';
 
-/**
- * Busca os membros de uma organização específica
- */
-export async function fetchOrganizationMembers(organizationId: string): Promise<Member[]> {
-  try {
-    console.log("Buscando membros para a organização:", organizationId);
-    const { data, error } = await supabase
-      .from('organization_members')
-      .select('*')
-      .eq('organization_id', organizationId);
-
-    if (error) {
-      console.error('Erro ao buscar membros da organização:', error);
-      throw error;
-    }
-
-    console.log("Membros encontrados:", data);
-    return data || [];
-  } catch (error) {
-    console.error('Erro completo ao buscar membros:', error);
-    throw error;
-  }
-}
 
 /**
  * Adiciona um novo membro à organização
@@ -38,7 +15,7 @@ export async function addNewMember(
   try {
     console.log('Adicionando novo membro:', { organizationId, email, name, role });
     
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('organization_members')
       .insert([
         { 
@@ -76,7 +53,7 @@ export async function updateExistingMember(id: string, data: Partial<Member>): P
   try {
     console.log('Atualizando membro:', { id, data });
     
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('organization_members')
       .update(data)
       .eq('id', id);
@@ -101,7 +78,7 @@ export async function removeExistingMember(id: string): Promise<boolean> {
     console.log('Removendo membro:', id);
     
     // Verifica se o membro existe antes de tentar remover
-    const { data: memberData, error: memberError } = await supabase
+    const { data: memberData, error: memberError } = await (supabase as any)
       .from('organization_members')
       .select('*')
       .eq('id', id)
@@ -118,7 +95,7 @@ export async function removeExistingMember(id: string): Promise<boolean> {
     }
     
     // Executa a operação de exclusão
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('organization_members')
       .delete()
       .eq('id', id);

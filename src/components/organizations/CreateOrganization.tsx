@@ -10,7 +10,7 @@ import { useOrganization } from '@/context/OrganizationContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { createNewOrganization } from '@/services/organizationService';
+import { createNewOrganization } from '@/services/organization/organizationService';
 import { useAuth } from '@/context/AuthContext';
 
 const formSchema = z.object({

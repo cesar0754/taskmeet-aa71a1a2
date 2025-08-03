@@ -3,7 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   fetchUserOrganizations, 
   fetchOrganizationMembers
-} from '@/services/organization';
+} from '@/services/organization/organizationService';
 
 /**
  * Hook que gerencia o carregamento de dados da organização e seus membros

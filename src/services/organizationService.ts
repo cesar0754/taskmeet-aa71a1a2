@@ -1,10 +1,10 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Organization, Member } from '../types/organization';
 
 export async function fetchUserOrganizations(userId: string): Promise<Organization | null> {
   try {
     console.log("Buscando organizações para o usuário:", userId);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('organizations')
       .select('*')
       .eq('owner_id', userId)
@@ -26,7 +26,7 @@ export async function fetchUserOrganizations(userId: string): Promise<Organizati
 export async function fetchOrganizationMembers(organizationId: string): Promise<Member[]> {
   try {
     console.log("Buscando membros para a organização:", organizationId);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('organization_members')
       .select('*')
       .eq('organization_id', organizationId);
@@ -50,7 +50,7 @@ export async function createNewOrganization(name: string, userId: string): Promi
     console.log('Criando organização - UserID:', userId);
 
     // 1. Criar a organização
-    const { data: newOrg, error: orgError } = await supabase
+    const { data: newOrg, error: orgError } = await (supabase as any)
       .from('organizations')
       .insert([
         { name, owner_id: userId }
@@ -72,7 +72,7 @@ export async function createNewOrganization(name: string, userId: string): Promi
     
     console.log('Dados do usuário para adicionar como membro:', { userName, userEmail });
 
-    const { data: memberData, error: memberError } = await supabase
+    const { data: memberData, error: memberError } = await (supabase as any)
       .from('organization_members')
       .insert([
         { 
@@ -101,7 +101,7 @@ export async function createNewOrganization(name: string, userId: string): Promi
 
 export async function updateExistingOrganization(id: string, data: Partial<Organization>): Promise<void> {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('organizations')
       .update(data)
       .eq('id', id);
@@ -125,7 +125,7 @@ export async function addNewMember(
   try {
     console.log('Adicionando novo membro:', { organizationId, email, name, role });
     
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('organization_members')
       .insert([
         { 
@@ -160,7 +160,7 @@ export async function updateExistingMember(id: string, data: Partial<Member>): P
   try {
     console.log('Atualizando membro:', { id, data });
     
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('organization_members')
       .update(data)
       .eq('id', id);
@@ -182,7 +182,7 @@ export async function removeExistingMember(id: string): Promise<boolean> {
     console.log('Removendo membro:', id);
     
     // Verifica se o membro existe antes de tentar remover
-    const { data: memberData, error: memberError } = await supabase
+    const { data: memberData, error: memberError } = await (supabase as any)
       .from('organization_members')
       .select('*')
       .eq('id', id)
@@ -199,7 +199,7 @@ export async function removeExistingMember(id: string): Promise<boolean> {
     }
     
     // Executa a operação de exclusão
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('organization_members')
       .delete()
       .eq('id', id);
