@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthLayout from '@/components/auth/AuthLayout';
 import LoginForm from '@/components/auth/LoginForm';
 import { useAuth } from '@/context/AuthContext';
-import { fetchUserOrganizations } from '@/services/organizationService';
+import { fetchUserOrganizations } from '@/services/organization/organizationService';
 import { useToast } from '@/hooks/use-toast';
 
 const LoginPage: React.FC = () => {
