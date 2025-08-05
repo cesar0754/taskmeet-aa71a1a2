@@ -134,6 +134,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          id: string
+          message: string | null
+          organization_id: string
+          read: boolean
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          organization_id: string
+          read?: boolean
+          title: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          organization_id?: string
+          read?: boolean
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       organization_members: {
         Row: {
           created_at: string
@@ -279,6 +318,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      notification_type:
+        | "info"
+        | "warning"
+        | "success"
+        | "error"
+        | "task"
+        | "meeting"
+        | "invitation"
       task_priority: "low" | "medium" | "high"
       task_status: "pending" | "in_progress" | "completed"
     }
@@ -408,6 +455,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      notification_type: [
+        "info",
+        "warning",
+        "success",
+        "error",
+        "task",
+        "meeting",
+        "invitation",
+      ],
       task_priority: ["low", "medium", "high"],
       task_status: ["pending", "in_progress", "completed"],
     },
