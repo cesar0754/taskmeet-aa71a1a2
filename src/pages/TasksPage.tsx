@@ -135,6 +135,7 @@ export default function TasksPage() {
                 initialData={{
                   title: editingTask.title,
                   description: editingTask.description,
+                  status: editingTask.status,
                   priority: editingTask.priority,
                   due_date: editingTask.due_date,
                   assigned_to: editingTask.assigned_to,

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { TaskCreateRequest, TaskPriority } from '@/types/task';
+import { TaskCreateRequest, TaskPriority, TaskStatus } from '@/types/task';
 import { Member } from '@/types/organization';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ import { fetchOrganizationMembers } from '@/services/organization/organizationSe
 const taskSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
   description: z.string().optional(),
+  status: z.enum(['pending', 'in_progress', 'completed']).optional(),
   priority: z.enum(['low', 'medium', 'high']),
   due_date: z.date().optional(),
   assigned_to: z.string().optional(), // Deprecated
@@ -37,6 +38,7 @@ interface TaskFormProps {
   initialData?: {
     title: string;
     description?: string;
+    status?: TaskStatus;
     priority: TaskPriority;
     due_date?: string;
     assigned_to?: string; // Deprecated
@@ -56,6 +58,7 @@ export default function TaskForm({ onSubmit, loading, onCancel, initialData }: T
     defaultValues: {
       title: initialData?.title || '',
       description: initialData?.description || '',
+      status: initialData?.status || 'pending',
       priority: initialData?.priority || 'medium',
       due_date: initialData?.due_date ? new Date(initialData.due_date) : undefined,
       assigned_to: initialData?.assigned_to || undefined,
@@ -92,9 +95,10 @@ export default function TaskForm({ onSubmit, loading, onCancel, initialData }: T
   };
 
   const handleSubmit = (data: TaskFormData) => {
-    const taskData: TaskCreateRequest = {
+    const taskData: TaskCreateRequest & { status?: TaskStatus } = {
       title: data.title,
       description: data.description,
+      status: data.status,
       priority: data.priority,
       due_date: data.due_date?.toISOString(),
       assignee_ids: selectedAssignees.length > 0 ? selectedAssignees : undefined,
@@ -111,6 +115,15 @@ export default function TaskForm({ onSubmit, loading, onCancel, initialData }: T
       high: 'Alta',
     };
     return labels[priority];
+  };
+
+  const getStatusLabel = (status: TaskStatus) => {
+    const labels = {
+      pending: 'Pendente',
+      in_progress: 'Em Progresso',
+      completed: 'Concluída',
+    };
+    return labels[status];
   };
 
   return (
@@ -146,6 +159,31 @@ export default function TaskForm({ onSubmit, loading, onCancel, initialData }: T
             </FormItem>
           )}
         />
+
+        {initialData && (
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="pending">{getStatusLabel('pending')}</SelectItem>
+                    <SelectItem value="in_progress">{getStatusLabel('in_progress')}</SelectItem>
+                    <SelectItem value="completed">{getStatusLabel('completed')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}
