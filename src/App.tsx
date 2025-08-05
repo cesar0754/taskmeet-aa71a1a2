@@ -17,6 +17,7 @@ import MembersPage from "./pages/MembersPage";
 import GroupsPage from "./pages/GroupsPage";
 import TasksPage from "./pages/TasksPage";
 import MeetingsPage from "./pages/MeetingsPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import AcceptInvitePage from "./pages/AcceptInvitePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage";
@@ -34,6 +35,7 @@ const ProtectedRoutes = () => {
           <Route path="/meetings" element={<MeetingsPage />} />
       <Route path="/members" element={<MembersPage />} />
       <Route path="/groups" element={<GroupsPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
