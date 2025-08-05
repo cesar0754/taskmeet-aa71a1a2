@@ -14,6 +14,7 @@ import RegisterPage from "./pages/RegisterPage";
 import CreateOrganizationPage from "./pages/CreateOrganizationPage";
 import Dashboard from "./pages/Dashboard";
 import MembersPage from "./pages/MembersPage";
+import GroupsPage from "./pages/GroupsPage";
 import TasksPage from "./pages/TasksPage";
 import MeetingsPage from "./pages/MeetingsPage";
 import AcceptInvitePage from "./pages/AcceptInvitePage";
@@ -32,6 +33,7 @@ const ProtectedRoutes = () => {
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/meetings" element={<MeetingsPage />} />
       <Route path="/members" element={<MembersPage />} />
+      <Route path="/groups" element={<GroupsPage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

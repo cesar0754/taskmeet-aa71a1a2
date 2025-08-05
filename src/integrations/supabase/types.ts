@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      group_members: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          member_id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          member_id: string
+          role?: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          member_id?: string
+          role?: string
+        }
+        Relationships: []
+      }
+      groups: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       meeting_attendees: {
         Row: {
           created_at: string
