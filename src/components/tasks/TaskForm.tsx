@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { TaskCreateRequest, TaskPriority } from '@/types/task';
+import { Member } from '@/types/organization';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +14,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useOrganization } from '@/context/OrganizationContext';
+import { fetchOrganizationMembers } from '@/services/organization/organizationService';
 
 const taskSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -31,6 +34,9 @@ interface TaskFormProps {
 }
 
 export default function TaskForm({ onSubmit, loading, onCancel }: TaskFormProps) {
+  const { organization } = useOrganization();
+  const [members, setMembers] = useState<Member[]>([]);
+  
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
@@ -39,6 +45,23 @@ export default function TaskForm({ onSubmit, loading, onCancel }: TaskFormProps)
       priority: 'medium',
     },
   });
+
+  useEffect(() => {
+    const loadMembers = async () => {
+      if (organization?.id) {
+        try {
+          const membersData = await fetchOrganizationMembers(organization.id);
+          // Filtrar apenas membros que têm user_id (estão ativos)
+          const activeMembers = membersData.filter(member => member.user_id);
+          setMembers(activeMembers);
+        } catch (error) {
+          console.error('Erro ao carregar membros:', error);
+        }
+      }
+    };
+    
+    loadMembers();
+  }, [organization?.id]);
 
   const handleSubmit = (data: TaskFormData) => {
     const taskData: TaskCreateRequest = {
@@ -151,6 +174,32 @@ export default function TaskForm({ onSubmit, loading, onCancel }: TaskFormProps)
                   />
                 </PopoverContent>
               </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="assigned_to"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Responsável</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um responsável (opcional)" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="">Nenhum responsável</SelectItem>
+                  {members.map((member) => (
+                    <SelectItem key={member.id} value={member.user_id!}>
+                      {member.name} ({member.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
