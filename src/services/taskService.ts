@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskCreateRequest, TaskUpdateRequest } from '@/types/task';
+import { notificationService } from './notificationService';
 
 export async function fetchTasks(organizationId: string): Promise<Task[]> {
   try {
@@ -34,6 +35,24 @@ export async function createTask(
       .single();
 
     if (error) throw error;
+
+    // Criar notificação se a tarefa foi atribuída a alguém
+    if (data.assigned_to && data.assigned_to !== userId) {
+      try {
+        await notificationService.createNotification({
+          user_id: data.assigned_to,
+          organization_id: organizationId,
+          title: `Nova tarefa atribuída: ${data.title}`,
+          message: data.description || `Você recebeu uma nova tarefa para completar.`,
+          type: 'task',
+          action_url: '/tasks'
+        });
+      } catch (notificationError) {
+        console.error('Error creating task notification:', notificationError);
+        // Não falha a criação da tarefa se a notificação falhar
+      }
+    }
+
     return data;
   } catch (error) {
     console.error('Error creating task:', error);
@@ -54,6 +73,26 @@ export async function updateTask(
       .single();
 
     if (error) throw error;
+
+    // Criar notificação se a tarefa foi reatribuída a alguém diferente
+    if (updates.assigned_to && data.assigned_to) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && data.assigned_to !== user.id) {
+          await notificationService.createNotification({
+            user_id: data.assigned_to,
+            organization_id: data.organization_id,
+            title: `Tarefa atualizada: ${data.title}`,
+            message: `A tarefa "${data.title}" foi atualizada.`,
+            type: 'task',
+            action_url: '/tasks'
+          });
+        }
+      } catch (notificationError) {
+        console.error('Error creating task update notification:', notificationError);
+      }
+    }
+
     return data;
   } catch (error) {
     console.error('Error updating task:', error);

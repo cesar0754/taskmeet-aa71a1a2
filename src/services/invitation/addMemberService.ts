@@ -2,6 +2,7 @@
 import { supabase } from '../../lib/supabase';
 import { Member } from '../../types/organization';
 import { Invitation } from '../../types/invitation';
+import { notificationService } from '../notificationService';
 
 /**
  * Adiciona um usuário como membro de uma organização
@@ -37,6 +38,21 @@ export async function addOrganizationMember(
     }
     
     console.log('[addOrganizationMember] Membro adicionado com sucesso:', memberData);
+
+    // Criar notificação de boas-vindas para o novo membro
+    try {
+      await notificationService.createNotification({
+        user_id: userId,
+        organization_id: invitation.organization_id,
+        title: 'Bem-vindo à organização!',
+        message: `Você foi adicionado com sucesso à organização como ${invitation.role}.`,
+        type: 'success',
+        action_url: '/dashboard'
+      });
+    } catch (notificationError) {
+      console.error('[addOrganizationMember] Erro ao criar notificação de boas-vindas:', notificationError);
+    }
+
     return memberData;
   } catch (error) {
     console.error('[addOrganizationMember] Erro ao adicionar membro:', error);

@@ -4,6 +4,7 @@ import { useOrganization } from '@/context/OrganizationContext';
 import { notificationService } from '@/services/notificationService';
 import { Notification, CreateNotificationData } from '@/types/notification';
 import { useToast } from '@/hooks/use-toast';
+import { useNotificationsRealtime } from './useNotificationsRealtime';
 
 export const useNotifications = () => {
   const { user } = useAuth();
@@ -19,6 +20,39 @@ export const useNotifications = () => {
       loadUnreadCount();
     }
   }, [user]);
+
+  // Configurar notificações em tempo real
+  useNotificationsRealtime({
+    onNewNotification: (notification) => {
+      setNotifications(prev => [notification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+      
+      // Mostrar toast para notificações importantes
+      if (notification.type === 'error' || notification.type === 'warning') {
+        toast({
+          title: notification.title,
+          description: notification.message,
+          variant: notification.type === 'error' ? 'destructive' : 'default'
+        });
+      }
+    },
+    onNotificationUpdate: (notification) => {
+      setNotifications(prev => 
+        prev.map(n => n.id === notification.id ? notification : n)
+      );
+      // Atualizar contagem se mudou o status de lida
+      if (notification.read) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    },
+    onNotificationDelete: (notificationId) => {
+      const notification = notifications.find(n => n.id === notificationId);
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      if (notification && !notification.read) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    }
+  });
 
   const loadNotifications = async () => {
     if (!user) return;

@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Meeting, MeetingAttendee, CreateMeetingData, UpdateMeetingData } from '@/types/meeting';
+import { notificationService } from './notificationService';
 
 export async function fetchMeetings(organizationId: string): Promise<Meeting[]> {
   const { data, error } = await supabase
@@ -61,6 +62,24 @@ export async function createMeeting(
   // Adicionar participantes se especificado
   if (attendee_ids && attendee_ids.length > 0) {
     await addMeetingAttendees(data.id, attendee_ids);
+    
+    // Criar notificações para os participantes
+    try {
+      for (const attendeeId of attendee_ids) {
+        if (attendeeId !== user.id) {
+          await notificationService.createNotification({
+            user_id: attendeeId,
+            organization_id: organizationId,
+            title: `Nova reunião: ${data.title}`,
+            message: `Você foi convidado para a reunião "${data.title}" em ${new Date(data.start_time).toLocaleDateString('pt-BR')}.`,
+            type: 'meeting',
+            action_url: '/meetings'
+          });
+        }
+      }
+    } catch (notificationError) {
+      console.error('Error creating meeting notifications:', notificationError);
+    }
   }
 
   return data;
