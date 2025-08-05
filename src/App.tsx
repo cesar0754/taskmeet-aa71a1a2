@@ -15,6 +15,7 @@ import CreateOrganizationPage from "./pages/CreateOrganizationPage";
 import Dashboard from "./pages/Dashboard";
 import MembersPage from "./pages/MembersPage";
 import TasksPage from "./pages/TasksPage";
+import MeetingsPage from "./pages/MeetingsPage";
 import AcceptInvitePage from "./pages/AcceptInvitePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage";
@@ -28,7 +29,8 @@ const ProtectedRoutes = () => {
   return (
     <Routes>
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/meetings" element={<MeetingsPage />} />
       <Route path="/members" element={<MembersPage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
