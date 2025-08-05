@@ -9,8 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -22,7 +24,8 @@ const taskSchema = z.object({
   description: z.string().optional(),
   priority: z.enum(['low', 'medium', 'high']),
   due_date: z.date().optional(),
-  assigned_to: z.string().optional(),
+  assigned_to: z.string().optional(), // Deprecated
+  assignee_ids: z.array(z.string()).optional(),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -36,13 +39,17 @@ interface TaskFormProps {
     description?: string;
     priority: TaskPriority;
     due_date?: string;
-    assigned_to?: string;
+    assigned_to?: string; // Deprecated
+    assignee_ids?: string[];
   };
 }
 
 export default function TaskForm({ onSubmit, loading, onCancel, initialData }: TaskFormProps) {
   const { organization } = useOrganization();
   const [members, setMembers] = useState<Member[]>([]);
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>(
+    initialData?.assignee_ids || (initialData?.assigned_to ? [initialData.assigned_to] : [])
+  );
   
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -52,6 +59,7 @@ export default function TaskForm({ onSubmit, loading, onCancel, initialData }: T
       priority: initialData?.priority || 'medium',
       due_date: initialData?.due_date ? new Date(initialData.due_date) : undefined,
       assigned_to: initialData?.assigned_to || undefined,
+      assignee_ids: initialData?.assignee_ids || (initialData?.assigned_to ? [initialData.assigned_to] : []),
     },
   });
 
@@ -72,13 +80,26 @@ export default function TaskForm({ onSubmit, loading, onCancel, initialData }: T
     loadMembers();
   }, [organization?.id]);
 
+  const handleAssigneeChange = (userId: string, checked: boolean) => {
+    let newAssignees;
+    if (checked) {
+      newAssignees = [...selectedAssignees, userId];
+    } else {
+      newAssignees = selectedAssignees.filter(id => id !== userId);
+    }
+    setSelectedAssignees(newAssignees);
+    form.setValue('assignee_ids', newAssignees);
+  };
+
   const handleSubmit = (data: TaskFormData) => {
     const taskData: TaskCreateRequest = {
       title: data.title,
       description: data.description,
       priority: data.priority,
       due_date: data.due_date?.toISOString(),
-      assigned_to: data.assigned_to || undefined,
+      assignee_ids: selectedAssignees.length > 0 ? selectedAssignees : undefined,
+      // Manter assigned_to para compatibilidade
+      assigned_to: selectedAssignees.length > 0 ? selectedAssignees[0] : undefined,
     };
     onSubmit(taskData);
   };
@@ -188,31 +209,30 @@ export default function TaskForm({ onSubmit, loading, onCancel, initialData }: T
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="assigned_to"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Responsável</FormLabel>
-              <Select onValueChange={(value) => field.onChange(value === "none" ? undefined : value)} value={field.value || "none"}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um responsável (opcional)" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum responsável</SelectItem>
-                  {members.map((member) => (
-                    <SelectItem key={member.id} value={member.user_id!}>
-                      {member.name} ({member.role})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div>
+          <FormLabel>Responsáveis</FormLabel>
+          <div className="mt-2 space-y-2 max-h-32 overflow-y-auto border rounded-md p-3">
+            {members.map((member) => (
+              <div key={member.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`assignee-${member.user_id}`}
+                  checked={selectedAssignees.includes(member.user_id!)}
+                  onCheckedChange={(checked) => 
+                    handleAssigneeChange(member.user_id!, checked as boolean)
+                  }
+                />
+                <Label htmlFor={`assignee-${member.user_id}`} className="text-sm">
+                  {member.name} ({member.role})
+                </Label>
+              </div>
+            ))}
+            {members.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhum membro encontrado na organização
+              </p>
+            )}
+          </div>
+        </div>
 
         <div className="flex gap-2 pt-4">
           <Button type="submit" disabled={loading} className="flex-1">

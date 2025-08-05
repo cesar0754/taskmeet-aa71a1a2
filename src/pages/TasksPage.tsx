@@ -138,6 +138,8 @@ export default function TasksPage() {
                   priority: editingTask.priority,
                   due_date: editingTask.due_date,
                   assigned_to: editingTask.assigned_to,
+                  assignee_ids: editingTask.assignees?.map(a => a.user_id) || 
+                                (editingTask.assigned_to ? [editingTask.assigned_to] : []),
                 }}
               />
             </DialogContent>

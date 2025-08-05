@@ -12,26 +12,42 @@ export async function fetchTasks(organizationId: string): Promise<Task[]> {
 
     if (error) throw error;
     
-    // Buscar dados dos membros atribuídos
-    const tasksWithMembers = await Promise.all(
+    // Buscar assignees para todas as tarefas
+    const tasksWithAssignees = await Promise.all(
       (data || []).map(async (task) => {
-        if (task.assigned_to) {
-          const { data: memberData } = await supabase
-            .from('organization_members')
-            .select('name, email')
-            .eq('user_id', task.assigned_to)
-            .single();
-          
-          return {
-            ...task,
-            assigned_member: memberData
-          } as Task;
-        }
-        return task;
+        // Buscar todos os assignees da tarefa
+        const { data: assigneesData } = await supabase
+          .from('task_assignees')
+          .select('*')
+          .eq('task_id', task.id);
+
+        // Buscar dados dos membros para cada assignee
+        const assigneesWithMembers = await Promise.all(
+          (assigneesData || []).map(async (assignee) => {
+            const { data: memberData } = await supabase
+              .from('organization_members')
+              .select('name, email')
+              .eq('user_id', assignee.user_id)
+              .single();
+            
+            return {
+              ...assignee,
+              member: memberData
+            };
+          })
+        );
+
+        return {
+          ...task,
+          assignees: assigneesWithMembers,
+          // Manter compatibilidade com código antigo
+          assigned_to: assigneesWithMembers.length > 0 ? assigneesWithMembers[0].user_id : undefined,
+          assigned_member: assigneesWithMembers.length > 0 ? assigneesWithMembers[0].member : undefined
+        } as Task;
       })
     );
     
-    return tasksWithMembers;
+    return tasksWithAssignees;
   } catch (error) {
     console.error('Error fetching tasks:', error);
     throw error;
@@ -47,52 +63,66 @@ export async function createTask(
     const { data, error } = await supabase
       .from('tasks')
       .insert({
-        ...task,
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        due_date: task.due_date,
         organization_id: organizationId,
         created_by: userId,
+        // Manter assigned_to para compatibilidade, mas usar o primeiro assignee se existir
+        assigned_to: task.assignee_ids && task.assignee_ids.length > 0 ? task.assignee_ids[0] : task.assigned_to,
       })
       .select()
       .single();
 
     if (error) throw error;
 
-    // Buscar dados do membro atribuído se existir
-    let taskWithMember: Task = data as Task;
-    if (data.assigned_to) {
-      const { data: memberData } = await supabase
-        .from('organization_members')
-        .select('name, email')
-        .eq('user_id', data.assigned_to)
-        .single();
-      
-      taskWithMember = {
-        ...data,
-        assigned_member: memberData
-      } as Task;
+    // Adicionar assignees se especificados
+    const assigneeIds = task.assignee_ids || (task.assigned_to ? [task.assigned_to] : []);
+    if (assigneeIds.length > 0) {
+      const assigneesData = assigneeIds.map(assigneeId => ({
+        task_id: data.id,
+        user_id: assigneeId
+      }));
+
+      const { error: assigneesError } = await supabase
+        .from('task_assignees')
+        .insert(assigneesData);
+
+      if (assigneesError) {
+        console.error('Error adding task assignees:', assigneesError);
+        // Não falha a criação da tarefa se os assignees falharem
+      }
     }
 
-    // Criar notificação se a tarefa foi atribuída a alguém diferente do criador
-    if (data.assigned_to && data.assigned_to !== userId) {
+    // Buscar dados completos da tarefa com assignees
+    const taskWithAssignees = await fetchTaskById(data.id);
+
+    // Criar notificações para todos os assignees (exceto o criador)
+    if (assigneeIds.length > 0) {
       try {
-        console.log('Criando notificação para novo responsável:', data.assigned_to);
-        await notificationService.createNotification({
-          user_id: data.assigned_to,
-          organization_id: organizationId,
-          title: `Nova tarefa atribuída: ${data.title}`,
-          message: data.description || `Você recebeu uma nova tarefa para completar.`,
-          type: 'task',
-          action_url: '/tasks'
-        });
-        console.log('Notificação criada com sucesso');
+        for (const assigneeId of assigneeIds) {
+          if (assigneeId !== userId) {
+            console.log('Criando notificação para responsável:', assigneeId);
+            await notificationService.createNotification({
+              user_id: assigneeId,
+              organization_id: organizationId,
+              title: `Nova tarefa atribuída: ${data.title}`,
+              message: data.description || `Você recebeu uma nova tarefa para completar.`,
+              type: 'task',
+              action_url: '/tasks'
+            });
+          }
+        }
+        console.log('Notificações criadas com sucesso');
       } catch (notificationError) {
-        console.error('Error creating task notification:', notificationError);
-        // Não falha a criação da tarefa se a notificação falhar
+        console.error('Error creating task notifications:', notificationError);
       }
     } else {
-      console.log('Notificação não enviada - tarefa não atribuída ou atribuída ao próprio criador');
+      console.log('Notificação não enviada - tarefa não atribuída');
     }
 
-    return taskWithMember;
+    return taskWithAssignees || data;
   } catch (error) {
     console.error('Error creating task:', error);
     throw error;
@@ -106,54 +136,76 @@ export async function updateTask(
   try {
     const { data, error } = await supabase
       .from('tasks')
-      .update(updates)
+      .update({
+        title: updates.title,
+        description: updates.description,
+        status: updates.status,
+        priority: updates.priority,
+        due_date: updates.due_date,
+        // Atualizar assigned_to apenas para compatibilidade
+        assigned_to: updates.assignee_ids && updates.assignee_ids.length > 0 ? updates.assignee_ids[0] : updates.assigned_to,
+      })
       .eq('id', taskId)
       .select()
       .single();
 
     if (error) throw error;
 
-    // Buscar dados do membro atribuído se existir
-    let taskWithMember: Task = data as Task;
-    if (data.assigned_to) {
-      const { data: memberData } = await supabase
-        .from('organization_members')
-        .select('name, email')
-        .eq('user_id', data.assigned_to)
-        .single();
-      
-      taskWithMember = {
-        ...data,
-        assigned_member: memberData
-      } as Task;
+    // Atualizar assignees se especificados
+    const assigneeIds = updates.assignee_ids || (updates.assigned_to ? [updates.assigned_to] : undefined);
+    if (assigneeIds !== undefined) {
+      // Remover assignees existentes
+      await supabase
+        .from('task_assignees')
+        .delete()
+        .eq('task_id', taskId);
+
+      // Adicionar novos assignees
+      if (assigneeIds.length > 0) {
+        const assigneesData = assigneeIds.map(assigneeId => ({
+          task_id: taskId,
+          user_id: assigneeId
+        }));
+
+        const { error: assigneesError } = await supabase
+          .from('task_assignees')
+          .insert(assigneesData);
+
+        if (assigneesError) {
+          console.error('Error updating task assignees:', assigneesError);
+        }
+      }
     }
 
-    // Criar notificação se a tarefa foi reatribuída a alguém diferente
-    if (updates.assigned_to && data.assigned_to) {
+    // Buscar dados completos da tarefa com assignees
+    const taskWithAssignees = await fetchTaskById(data.id);
+
+    // Criar notificações para assignees atualizados (exceto o usuário atual)
+    if (assigneeIds && assigneeIds.length > 0) {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (user && data.assigned_to !== user.id) {
-          console.log('Criando notificação para reatribuição:', data.assigned_to);
-          await notificationService.createNotification({
-            user_id: data.assigned_to,
-            organization_id: data.organization_id,
-            title: `Tarefa atualizada: ${data.title}`,
-            message: `A tarefa "${data.title}" foi atualizada.`,
-            type: 'task',
-            action_url: '/tasks'
-          });
-          console.log('Notificação de reatribuição criada com sucesso');
-        } else {
-          console.log('Notificação não enviada - tarefa reatribuída ao próprio usuário');
+        for (const assigneeId of assigneeIds) {
+          if (user && assigneeId !== user.id) {
+            console.log('Criando notificação para reatribuição:', assigneeId);
+            await notificationService.createNotification({
+              user_id: assigneeId,
+              organization_id: data.organization_id,
+              title: `Tarefa atualizada: ${data.title}`,
+              message: `A tarefa "${data.title}" foi atualizada.`,
+              type: 'task',
+              action_url: '/tasks'
+            });
+          }
         }
+        console.log('Notificações de reatribuição criadas com sucesso');
       } catch (notificationError) {
-        console.error('Error creating task update notification:', notificationError);
+        console.error('Error creating task update notifications:', notificationError);
       }
     } else {
       console.log('Notificação não enviada - tarefa não foi reatribuída');
     }
 
-    return taskWithMember;
+    return taskWithAssignees || data;
   } catch (error) {
     console.error('Error updating task:', error);
     throw error;
@@ -174,18 +226,47 @@ export async function deleteTask(taskId: string): Promise<void> {
   }
 }
 
-export async function fetchTasksByUser(userId: string): Promise<Task[]> {
+// Função auxiliar para buscar uma tarefa por ID com todos os assignees
+async function fetchTaskById(taskId: string): Promise<Task | null> {
   try {
-    const { data, error } = await supabase
+    const { data: taskData, error: taskError } = await supabase
       .from('tasks')
       .select('*')
-      .eq('assigned_to', userId)
-      .order('due_date', { ascending: true });
+      .eq('id', taskId)
+      .single();
 
-    if (error) throw error;
-    return data || [];
+    if (taskError || !taskData) return null;
+
+    // Buscar assignees
+    const { data: assigneesData } = await supabase
+      .from('task_assignees')
+      .select('*')
+      .eq('task_id', taskId);
+
+    // Buscar dados dos membros para cada assignee
+    const assigneesWithMembers = await Promise.all(
+      (assigneesData || []).map(async (assignee) => {
+        const { data: memberData } = await supabase
+          .from('organization_members')
+          .select('name, email')
+          .eq('user_id', assignee.user_id)
+          .single();
+        
+        return {
+          ...assignee,
+          member: memberData
+        };
+      })
+    );
+
+    return {
+      ...taskData,
+      assignees: assigneesWithMembers,
+      assigned_to: assigneesWithMembers.length > 0 ? assigneesWithMembers[0].user_id : undefined,
+      assigned_member: assigneesWithMembers.length > 0 ? assigneesWithMembers[0].member : undefined
+    } as Task;
   } catch (error) {
-    console.error('Error fetching user tasks:', error);
-    throw error;
+    console.error('Error fetching task by id:', error);
+    return null;
   }
 }

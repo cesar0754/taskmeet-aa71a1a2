@@ -139,10 +139,22 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete }: Tas
             </div>
           )}
 
-          {task.assigned_to && (
+          {task.assignees && task.assignees.length > 0 && (
             <div className="flex items-center text-sm text-muted-foreground">
               <User className="mr-2 h-4 w-4" />
-              <span>Responsável: {task.assigned_member?.name || 'Usuário não encontrado'}</span>
+              <div className="flex flex-col">
+                <span>Responsáveis:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {task.assignees.map((assignee, index) => (
+                    <span 
+                      key={assignee.id} 
+                      className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                    >
+                      {assignee.member?.name || 'Usuário não encontrado'}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
