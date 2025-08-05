@@ -31,18 +31,27 @@ interface TaskFormProps {
   onSubmit: (data: TaskCreateRequest) => void;
   loading?: boolean;
   onCancel?: () => void;
+  initialData?: {
+    title: string;
+    description?: string;
+    priority: TaskPriority;
+    due_date?: string;
+    assigned_to?: string;
+  };
 }
 
-export default function TaskForm({ onSubmit, loading, onCancel }: TaskFormProps) {
+export default function TaskForm({ onSubmit, loading, onCancel, initialData }: TaskFormProps) {
   const { organization } = useOrganization();
   const [members, setMembers] = useState<Member[]>([]);
   
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
-      title: '',
-      description: '',
-      priority: 'medium',
+      title: initialData?.title || '',
+      description: initialData?.description || '',
+      priority: initialData?.priority || 'medium',
+      due_date: initialData?.due_date ? new Date(initialData.due_date) : undefined,
+      assigned_to: initialData?.assigned_to || '',
     },
   });
 
@@ -207,7 +216,7 @@ export default function TaskForm({ onSubmit, loading, onCancel }: TaskFormProps)
 
         <div className="flex gap-2 pt-4">
           <Button type="submit" disabled={loading} className="flex-1">
-            {loading ? 'Criando...' : 'Criar Tarefa'}
+            {loading ? 'Salvando...' : (initialData ? 'Atualizar Tarefa' : 'Criar Tarefa')}
           </Button>
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>

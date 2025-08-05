@@ -38,6 +38,18 @@ export default function TasksPage() {
     setEditingTask(task);
   };
 
+  const handleUpdateTask = async (taskData: any) => {
+    if (!editingTask) return;
+    
+    setActionLoading(true);
+    try {
+      await updateTask(editingTask.id, taskData);
+      setEditingTask(null);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleDeleteTask = async (taskId: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta tarefa?')) {
       try {
@@ -108,10 +120,18 @@ export default function TasksPage() {
               <DialogHeader>
                 <DialogTitle>Editar Tarefa</DialogTitle>
               </DialogHeader>
-              {/* TODO: Implementar formulário de edição */}
-              <div className="p-4 text-center text-muted-foreground">
-                Formulário de edição será implementado em breve
-              </div>
+              <TaskForm
+                onSubmit={handleUpdateTask}
+                loading={actionLoading}
+                onCancel={() => setEditingTask(null)}
+                initialData={{
+                  title: editingTask.title,
+                  description: editingTask.description,
+                  priority: editingTask.priority,
+                  due_date: editingTask.due_date,
+                  assigned_to: editingTask.assigned_to,
+                }}
+              />
             </DialogContent>
           </Dialog>
         )}
