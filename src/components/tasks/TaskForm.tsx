@@ -51,7 +51,7 @@ export default function TaskForm({ onSubmit, loading, onCancel, initialData }: T
       description: initialData?.description || '',
       priority: initialData?.priority || 'medium',
       due_date: initialData?.due_date ? new Date(initialData.due_date) : undefined,
-      assigned_to: initialData?.assigned_to || '',
+      assigned_to: initialData?.assigned_to || undefined,
     },
   });
 
@@ -196,14 +196,14 @@ export default function TaskForm({ onSubmit, loading, onCancel, initialData }: T
           render={({ field }) => (
             <FormItem>
               <FormLabel>Responsável</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={(value) => field.onChange(value === "none" ? undefined : value)} value={field.value || "none"}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um responsável (opcional)" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Nenhum responsável</SelectItem>
+                  <SelectItem value="none">Nenhum responsável</SelectItem>
                   {members.map((member) => (
                     <SelectItem key={member.id} value={member.user_id!}>
                       {member.name} ({member.role})
