@@ -142,7 +142,7 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete }: Tas
           {task.assigned_to && (
             <div className="flex items-center text-sm text-muted-foreground">
               <User className="mr-2 h-4 w-4" />
-              <span>Responsável: {task.assigned_to}</span>
+              <span>Responsável: {task.assigned_member?.name || 'Usuário não encontrado'}</span>
             </div>
           )}
         </div>

@@ -32,11 +32,7 @@ export function useTasks() {
   };
 
   const handleCreateTask = async (taskData: TaskCreateRequest) => {
-    console.log('useTasks handleCreateTask called with:', taskData);
-    console.log('Current organization:', organization?.id, 'Current user:', user?.id);
-    
     if (!organization?.id || !user?.id) {
-      console.error('Missing organization or user:', { organizationId: organization?.id, userId: user?.id });
       toast({
         title: 'Erro',
         description: 'Organização ou usuário não encontrado',

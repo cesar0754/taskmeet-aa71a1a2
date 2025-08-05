@@ -73,7 +73,6 @@ export default function TaskForm({ onSubmit, loading, onCancel, initialData }: T
   }, [organization?.id]);
 
   const handleSubmit = (data: TaskFormData) => {
-    console.log('TaskForm handleSubmit called with:', data);
     const taskData: TaskCreateRequest = {
       title: data.title,
       description: data.description,
@@ -81,7 +80,6 @@ export default function TaskForm({ onSubmit, loading, onCancel, initialData }: T
       due_date: data.due_date?.toISOString(),
       assigned_to: data.assigned_to || undefined,
     };
-    console.log('Transformed taskData:', taskData);
     onSubmit(taskData);
   };
 

@@ -19,18 +19,13 @@ export default function TasksPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-
+  
   console.log('TasksPage render - user:', user?.id, 'organization:', organization?.id);
 
   const handleCreateTask = async (taskData: any) => {
-    console.log('handleCreateTask called with:', taskData);
-    console.log('Current organization:', organization);
-    console.log('Current user:', user);
-    
     setActionLoading(true);
     try {
-      const result = await createTask(taskData);
-      console.log('Task created successfully:', result);
+      await createTask(taskData);
       setShowCreateDialog(false);
     } catch (error) {
       console.error('Error in handleCreateTask:', error);

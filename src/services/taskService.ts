@@ -11,7 +11,27 @@ export async function fetchTasks(organizationId: string): Promise<Task[]> {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // Buscar dados dos membros atribuídos
+    const tasksWithMembers = await Promise.all(
+      (data || []).map(async (task) => {
+        if (task.assigned_to) {
+          const { data: memberData } = await supabase
+            .from('organization_members')
+            .select('name, email')
+            .eq('user_id', task.assigned_to)
+            .single();
+          
+          return {
+            ...task,
+            assigned_member: memberData
+          } as Task;
+        }
+        return task;
+      })
+    );
+    
+    return tasksWithMembers;
   } catch (error) {
     console.error('Error fetching tasks:', error);
     throw error;
@@ -36,9 +56,25 @@ export async function createTask(
 
     if (error) throw error;
 
-    // Criar notificação se a tarefa foi atribuída a alguém
+    // Buscar dados do membro atribuído se existir
+    let taskWithMember: Task = data as Task;
+    if (data.assigned_to) {
+      const { data: memberData } = await supabase
+        .from('organization_members')
+        .select('name, email')
+        .eq('user_id', data.assigned_to)
+        .single();
+      
+      taskWithMember = {
+        ...data,
+        assigned_member: memberData
+      } as Task;
+    }
+
+    // Criar notificação se a tarefa foi atribuída a alguém diferente do criador
     if (data.assigned_to && data.assigned_to !== userId) {
       try {
+        console.log('Criando notificação para novo responsável:', data.assigned_to);
         await notificationService.createNotification({
           user_id: data.assigned_to,
           organization_id: organizationId,
@@ -47,13 +83,16 @@ export async function createTask(
           type: 'task',
           action_url: '/tasks'
         });
+        console.log('Notificação criada com sucesso');
       } catch (notificationError) {
         console.error('Error creating task notification:', notificationError);
         // Não falha a criação da tarefa se a notificação falhar
       }
+    } else {
+      console.log('Notificação não enviada - tarefa não atribuída ou atribuída ao próprio criador');
     }
 
-    return data;
+    return taskWithMember;
   } catch (error) {
     console.error('Error creating task:', error);
     throw error;
@@ -74,11 +113,27 @@ export async function updateTask(
 
     if (error) throw error;
 
+    // Buscar dados do membro atribuído se existir
+    let taskWithMember: Task = data as Task;
+    if (data.assigned_to) {
+      const { data: memberData } = await supabase
+        .from('organization_members')
+        .select('name, email')
+        .eq('user_id', data.assigned_to)
+        .single();
+      
+      taskWithMember = {
+        ...data,
+        assigned_member: memberData
+      } as Task;
+    }
+
     // Criar notificação se a tarefa foi reatribuída a alguém diferente
     if (updates.assigned_to && data.assigned_to) {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user && data.assigned_to !== user.id) {
+          console.log('Criando notificação para reatribuição:', data.assigned_to);
           await notificationService.createNotification({
             user_id: data.assigned_to,
             organization_id: data.organization_id,
@@ -87,13 +142,18 @@ export async function updateTask(
             type: 'task',
             action_url: '/tasks'
           });
+          console.log('Notificação de reatribuição criada com sucesso');
+        } else {
+          console.log('Notificação não enviada - tarefa reatribuída ao próprio usuário');
         }
       } catch (notificationError) {
         console.error('Error creating task update notification:', notificationError);
       }
+    } else {
+      console.log('Notificação não enviada - tarefa não foi reatribuída');
     }
 
-    return data;
+    return taskWithMember;
   } catch (error) {
     console.error('Error updating task:', error);
     throw error;

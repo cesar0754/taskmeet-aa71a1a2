@@ -13,6 +13,10 @@ export interface Task {
   organization_id: string;
   created_at: string;
   updated_at: string;
+  assigned_member?: {
+    name: string;
+    email: string;
+  };
 }
 
 export interface TaskCreateRequest {
