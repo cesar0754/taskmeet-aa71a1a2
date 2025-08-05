@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Task } from '@/types/task';
 import { useTasks } from '@/hooks/useTasks';
+import { useAuth } from '@/context/AuthContext';
+import { useOrganization } from '@/context/OrganizationContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import TasksList from '@/components/tasks/TasksList';
@@ -12,15 +14,26 @@ import { Plus } from 'lucide-react';
 
 export default function TasksPage() {
   const { tasks, loading, createTask, updateTask, deleteTask } = useTasks();
+  const { user } = useAuth();
+  const { organization } = useOrganization();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
+  console.log('TasksPage render - user:', user?.id, 'organization:', organization?.id);
+
   const handleCreateTask = async (taskData: any) => {
+    console.log('handleCreateTask called with:', taskData);
+    console.log('Current organization:', organization);
+    console.log('Current user:', user);
+    
     setActionLoading(true);
     try {
-      await createTask(taskData);
+      const result = await createTask(taskData);
+      console.log('Task created successfully:', result);
       setShowCreateDialog(false);
+    } catch (error) {
+      console.error('Error in handleCreateTask:', error);
     } finally {
       setActionLoading(false);
     }
