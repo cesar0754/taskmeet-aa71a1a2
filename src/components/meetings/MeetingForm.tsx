@@ -89,6 +89,20 @@ export function MeetingForm({ meeting, onSubmit, onCancel, loading }: MeetingFor
     setValue('attendee_ids', newAttendees);
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    const allUserIds = members.map(member => member.user_id!);
+    if (checked) {
+      setSelectedAttendees(allUserIds);
+      setValue('attendee_ids', allUserIds);
+    } else {
+      setSelectedAttendees([]);
+      setValue('attendee_ids', []);
+    }
+  };
+
+  const isAllSelected = members.length > 0 && selectedAttendees.length === members.length;
+  const isPartiallySelected = selectedAttendees.length > 0 && selectedAttendees.length < members.length;
+
   const handleFormSubmit = async (data: CreateMeetingData) => {
     const submitData = {
       ...data,
@@ -173,26 +187,40 @@ export function MeetingForm({ meeting, onSubmit, onCancel, loading }: MeetingFor
 
       <div>
         <Label>Participantes</Label>
-        <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
-          {members.map((member) => (
-            <div key={member.id} className="flex items-center space-x-2">
+        <div className="mt-2 space-y-2">
+          {members.length > 0 && (
+            <div className="flex items-center space-x-2 pb-2 border-b border-border">
               <Checkbox
-                id={`attendee-${member.user_id}`}
-                checked={selectedAttendees.includes(member.user_id!)}
-                onCheckedChange={(checked) => 
-                  handleAttendeeChange(member.user_id!, checked as boolean)
-                }
+                id="select-all"
+                checked={isAllSelected}
+                onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
               />
-              <Label htmlFor={`attendee-${member.user_id}`} className="text-sm">
-                {member.name} ({member.role})
+              <Label htmlFor="select-all" className="text-sm font-medium">
+                {isAllSelected ? 'Desmarcar todos' : 'Selecionar todos'}
               </Label>
             </div>
-          ))}
-          {members.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhum membro encontrado na organização
-            </p>
           )}
+          <div className="max-h-32 overflow-y-auto space-y-2">
+            {members.map((member) => (
+              <div key={member.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`attendee-${member.user_id}`}
+                  checked={selectedAttendees.includes(member.user_id!)}
+                  onCheckedChange={(checked) => 
+                    handleAttendeeChange(member.user_id!, checked as boolean)
+                  }
+                />
+                <Label htmlFor={`attendee-${member.user_id}`} className="text-sm">
+                  {member.name} ({member.role})
+                </Label>
+              </div>
+            ))}
+            {members.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhum membro encontrado na organização
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
