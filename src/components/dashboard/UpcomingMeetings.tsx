@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +21,8 @@ interface UpcomingMeetingsProps {
 }
 
 const UpcomingMeetings: React.FC<UpcomingMeetingsProps> = ({ meetings }) => {
+  const navigate = useNavigate();
+
   const formatTime = (date: Date) => {
     return format(date, 'HH:mm', { locale: ptBR });
   };
@@ -37,11 +40,24 @@ const UpcomingMeetings: React.FC<UpcomingMeetingsProps> = ({ meetings }) => {
     );
   };
 
+  const handleViewAllMeetings = () => {
+    navigate('/meetings');
+  };
+
+  const handleMeetingClick = (meetingId: string) => {
+    navigate(`/meetings?meeting=${meetingId}`);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-xl">Próximas Reuniões</CardTitle>
-        <Button variant="ghost" size="sm" className="gap-1">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="gap-1"
+          onClick={handleViewAllMeetings}
+        >
           <Calendar className="h-4 w-4" />
           <span className="hidden sm:inline">Ver agenda</span>
         </Button>
@@ -53,7 +69,11 @@ const UpcomingMeetings: React.FC<UpcomingMeetingsProps> = ({ meetings }) => {
           </div>
         ) : (
           meetings.map((meeting) => (
-            <div key={meeting.id} className="border rounded-md p-3 space-y-2">
+            <div 
+              key={meeting.id} 
+              className="border rounded-md p-3 space-y-2 cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => handleMeetingClick(meeting.id)}
+            >
               <div className="flex items-center justify-between">
                 <h4 className="font-medium">{meeting.title}</h4>
                 {isToday(meeting.startTime) && (

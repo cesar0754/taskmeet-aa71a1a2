@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckSquare, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,8 @@ const getStatusText = (status: TaskStatus) => {
 };
 
 const PendingTasks: React.FC<PendingTasksProps> = ({ tasks }) => {
+  const navigate = useNavigate();
+
   const formatDate = (date?: Date) => {
     if (!date) return 'Sem prazo';
     
@@ -65,11 +68,24 @@ const PendingTasks: React.FC<PendingTasksProps> = ({ tasks }) => {
     return dueDate < today;
   };
 
+  const handleViewAllTasks = () => {
+    navigate('/tasks');
+  };
+
+  const handleTaskClick = (taskId: string) => {
+    navigate(`/tasks?task=${taskId}`);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-xl">Tarefas Pendentes</CardTitle>
-        <Button variant="ghost" size="sm" className="gap-1">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="gap-1"
+          onClick={handleViewAllTasks}
+        >
           <CheckSquare className="h-4 w-4" />
           <span className="hidden sm:inline">Ver todas</span>
         </Button>
@@ -81,7 +97,11 @@ const PendingTasks: React.FC<PendingTasksProps> = ({ tasks }) => {
           </div>
         ) : (
           tasks.map((task) => (
-            <div key={task.id} className="flex items-center justify-between border rounded-md p-3">
+            <div 
+              key={task.id} 
+              className="flex items-center justify-between border rounded-md p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => handleTaskClick(task.id)}
+            >
               <div className="flex items-center gap-3">
                 <div>
                   <CheckSquare className="h-5 w-5 text-muted-foreground" />
@@ -109,7 +129,15 @@ const PendingTasks: React.FC<PendingTasksProps> = ({ tasks }) => {
                     <AvatarFallback>{task.assignee.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                 )}
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTaskClick(task.id);
+                  }}
+                >
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>

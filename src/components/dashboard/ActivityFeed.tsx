@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CheckSquare, Calendar, Users, MessageSquare } from 'lucide-react';
@@ -53,6 +54,28 @@ const formatRelativeTime = (date: Date) => {
 };
 
 const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities }) => {
+  const navigate = useNavigate();
+
+  const getNavigationPath = (type: ActivityType) => {
+    switch (type) {
+      case 'task':
+        return '/tasks';
+      case 'meeting':
+        return '/meetings';
+      case 'member':
+        return '/members';
+      case 'comment':
+        return '/notifications';
+      default:
+        return '/dashboard';
+    }
+  };
+
+  const handleActivityClick = (activity: Activity) => {
+    const path = getNavigationPath(activity.type);
+    navigate(path);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -65,7 +88,11 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities }) => {
           </div>
         ) : (
           activities.map((activity) => (
-            <div key={activity.id} className="flex gap-3">
+            <div 
+              key={activity.id} 
+              className="flex gap-3 cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
+              onClick={() => handleActivityClick(activity)}
+            >
               <Avatar className="h-8 w-8">
                 <AvatarImage src={activity.user.avatarUrl} />
                 <AvatarFallback>{activity.user.name.charAt(0)}</AvatarFallback>
