@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   CheckSquare, 
@@ -80,10 +80,10 @@ const AppSidebar: React.FC = () => {
                     isActive={location.pathname === link.to}
                     tooltip={link.label}
                   >
-                    <a href={link.to}>
+                    <Link to={link.to}>
                       {link.icon}
                       <span>{link.label}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
