@@ -75,21 +75,17 @@ const InvitationRegisterForm: React.FC<InvitationRegisterFormProps> = ({ invitat
       
       console.log('[InvitationRegisterForm] Usuário registrado com sucesso:', signUpData.user.id);
       
-      // Aceitar o convite
-      const { data: acceptData, error: acceptError } = await supabase.functions.invoke('accept-invitation', {
-        body: { 
-          token,
-          userId: signUpData.user.id
-        }
-      });
+      // Aceitar o convite usando o serviço
+      const { acceptInvitation } = await import('@/services/invitation');
+      const result = await acceptInvitation(token, signUpData.user.id);
       
-      if (acceptError) {
-        console.error('[InvitationRegisterForm] Erro ao aceitar convite:', acceptError);
-        setError('Erro ao aceitar convite.');
+      if (!result.success) {
+        console.error('[InvitationRegisterForm] Erro ao aceitar convite:', result.message);
+        setError(result.message || 'Erro ao aceitar convite.');
         return;
       }
       
-      console.log('[InvitationRegisterForm] Convite aceito com sucesso:', acceptData);
+      console.log('[InvitationRegisterForm] Convite aceito com sucesso:', result);
       
       // Login automático
       const { error: signInError } = await supabase.auth.signInWithPassword({

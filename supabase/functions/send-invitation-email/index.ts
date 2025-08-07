@@ -1,6 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SMTPClient } from "npm:emailjs@4.0.3";
+import { Resend } from "npm:resend@2.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 // Headers CORS para permitir acesso da aplicação front-end
 const corsHeaders = {
@@ -37,88 +39,53 @@ const handler = async (req: Request): Promise<Response> => {
     if (role === "admin") roleName = "Administrador";
     if (role === "editor") roleName = "Editor";
 
-    // Pegar a senha do ambiente
-    const smtpPassword = Deno.env.get("SMTP_PASSWORD");
-    if (!smtpPassword) {
-      console.error("Erro: SMTP_PASSWORD não configurado");
-      throw new Error("Configuração de SMTP incompleta");
-    }
-
-    // Configurar cliente SMTP com senha atualizada
-    const client = new SMTPClient({
-      user: "support@taskmeet.com.br",
-      password: smtpPassword,
-      host: "smtp.taskmeet.com.br",
-      port: 587,
-      tls: {
-        ciphers: 'SSLv3',
-        rejectUnauthorized: false
-      },
-      timeout: 15000,
+    const emailResponse = await resend.emails.send({
+      from: "Convites <onboarding@resend.dev>",
+      to: [email],
+      subject: `Convite para ${organization}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #333; text-align: center;">Você foi convidado para ${organization}</h1>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0; font-size: 16px;">Olá ${name},</p>
+            <p style="margin: 0 0 10px 0;">Você foi convidado para participar da organização <strong>${organization}</strong> como <strong>${roleName}</strong>.</p>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${inviteLink}" 
+               style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+              Aceitar Convite
+            </a>
+          </div>
+          
+          <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 14px; color: #856404;">
+              <strong>O que acontece agora?</strong><br>
+              1. Clique no botão "Aceitar Convite" acima<br>
+              2. Faça seu cadastro ou login se já tiver uma conta<br>
+              3. Tenha acesso completo à organização
+            </p>
+          </div>
+          
+          <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
+            <p style="font-size: 12px; color: #666; text-align: center;">
+              Se você não solicitou este convite, pode ignorar este email com segurança.
+            </p>
+          </div>
+        </div>
+      `,
     });
 
-    // Criar conteúdo do e-mail HTML
-    const htmlBody = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-        <h1 style="color: #3b82f6; margin-bottom: 20px;">Você foi convidado para o TaskMeet!</h1>
-        
-        <p>Olá ${name},</p>
-        
-        <p>Você foi convidado para se juntar à organização <strong>${organization}</strong> no TaskMeet com o papel de <strong>${roleName}</strong>.</p>
-        
-        <div style="margin: 30px 0;">
-          <a href="${inviteLink}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">
-            Aceitar Convite
-          </a>
-        </div>
-        
-        <p>Ou você pode copiar e colar o link abaixo no seu navegador:</p>
-        <p style="margin-bottom: 30px; word-break: break-all; color: #666;">${inviteLink}</p>
-        
-        <p>Este convite expirará em 7 dias.</p>
-        
-        <p>Se você não estava esperando este convite, pode ignorar este e-mail com segurança.</p>
-        
-        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eaeaea; color: #666; font-size: 12px;">
-          <p>TaskMeet - Gerencie suas tarefas e colabore com sua equipe de forma eficiente.</p>
-        </div>
-      </div>
-    `;
+    console.log("Email enviado com sucesso:", emailResponse);
 
-    // Preparar a mensagem de e-mail
-    const message = {
-      from: "TaskMeet <support@taskmeet.com.br>",
-      to: email,
-      subject: `Convite para se juntar à ${organization} no TaskMeet`,
-      text: `Olá ${name}, você foi convidado para se juntar à organização ${organization} no TaskMeet com o papel de ${roleName}. Acesse ${inviteLink} para aceitar o convite.`,
-      html: htmlBody,
-    };
-
-    console.log("Enviando e-mail via SMTP...");
-    
-    try {
-      // Enviar o e-mail
-      const emailResult = await client.sendAsync(message);
-      console.log("Resposta do envio de e-mail:", emailResult);
-
-      // Retornando sucesso
-      return new Response(JSON.stringify({ success: true, messageId: emailResult.id }), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
-      });
-    } catch (emailError) {
-      console.error("Erro específico ao enviar e-mail:", emailError);
-      return new Response(
-        JSON.stringify({ error: "Erro ao enviar e-mail", details: emailError.message }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
+    return new Response(JSON.stringify({ success: true, data: emailResponse }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders,
+      },
+    });
   } catch (error: any) {
     console.error("Erro ao processar requisição:", error);
     return new Response(

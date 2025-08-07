@@ -1,16 +1,14 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface AcceptInvitationRequest {
   token: string;
-  userId?: string; // Opcional, pois podemos usar o token JWT do usuário atual
+  userId?: string;
 }
 
 serve(async (req) => {
@@ -22,161 +20,126 @@ serve(async (req) => {
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    const { token, userId: providedUserId } = await req.json() as AcceptInvitationRequest;
-
-    if (!token) {
-      return new Response(
-        JSON.stringify({ error: "Token é obrigatório" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Se userId não for fornecido, obtenha o usuário atualmente autenticado
-    let userId = providedUserId;
+    const { token, userId }: AcceptInvitationRequest = await req.json();
     
-    if (!userId || userId === 'default') {
-      // Extrair o token JWT da solicitação
-      const authHeader = req.headers.get('Authorization') || '';
-      const jwt = authHeader.replace('Bearer ', '');
-      
-      if (!jwt) {
-        return new Response(
-          JSON.stringify({ error: "Não autorizado. Faça login e tente novamente." }),
-          {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      
-      // Verificar o token JWT e obter o ID do usuário
-      const { data: userData, error: authError } = await supabase.auth.getUser(jwt);
-      
-      if (authError || !userData.user) {
-        console.error("Erro ao verificar usuário:", authError);
-        return new Response(
-          JSON.stringify({ error: "Não autorizado. Faça login e tente novamente." }),
-          {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      
-      userId = userData.user.id;
-    }
+    console.log("Processando aceitação de convite:", { token, userId });
 
-    console.log(`Processando aceitação de convite. Token: ${token}, userId: ${userId}`);
+    let currentUserId = userId;
 
-    // 1. Buscar o convite
-    const { data: invitation, error: invitationError } = await supabase
-      .from("member_invitations")
-      .select("*")
-      .eq("token", token)
-      .is("used_at", null)
-      .single();
-
-    if (invitationError || !invitation) {
-      console.error("Erro ao buscar convite:", invitationError);
-      return new Response(
-        JSON.stringify({ error: "Convite não encontrado ou já utilizado" }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Se userId não foi fornecido, extrair do JWT
+    if (!currentUserId) {
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader) {
+        const jwt = authHeader.replace("Bearer ", "");
+        const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+        
+        if (userError || !user) {
+          console.error("Erro ao obter usuário:", userError);
+          return new Response(
+            JSON.stringify({ error: "Usuário não autenticado" }),
+            { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
         }
-      );
+        currentUserId = user.id;
+      } else {
+        return new Response(
+          JSON.stringify({ error: "Token de autorização não fornecido" }),
+          { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
     }
 
-    // 2. Verificar se o usuário já é membro
-    const { data: existingMember, error: memberError } = await supabase
+    // Buscar convite pendente usando email como token
+    const { data: invitations, error: fetchError } = await supabase
       .from("organization_members")
       .select("*")
+      .eq("email", token)
+      .is("user_id", null)
+      .limit(1);
+
+    if (fetchError) {
+      console.error("Erro ao buscar convite:", fetchError);
+      return new Response(
+        JSON.stringify({ error: "Erro interno ao buscar convite" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!invitations || invitations.length === 0) {
+      console.log("Convite não encontrado para token:", token);
+      return new Response(
+        JSON.stringify({ error: "Convite não encontrado ou já foi usado" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const invitation = invitations[0];
+
+    // Verificar se o usuário já é membro da organização
+    const { data: existingMember } = await supabase
+      .from("organization_members")
+      .select("id")
       .eq("organization_id", invitation.organization_id)
-      .eq("user_id", userId)
+      .eq("user_id", currentUserId)
+      .not("user_id", "is", null)
       .single();
 
     if (existingMember) {
-      // Se já é membro, apenas marcar o convite como utilizado
+      // Usuário já é membro, apenas marcar convite como usado
       await supabase
-        .from("member_invitations")
-        .update({ used_at: new Date().toISOString() })
+        .from("organization_members")
+        .delete()
         .eq("id", invitation.id);
 
+      console.log("Usuário já era membro, convite removido");
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: "Usuário já é membro desta organização",
+          message: "Você já é membro desta organização",
           member: existingMember 
         }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // 3. Adicionar usuário como membro
-    const { data: member, error: addError } = await supabase
+    // Atualizar o convite pendente com o user_id
+    const { data: updatedMember, error: updateError } = await supabase
       .from("organization_members")
-      .insert({
-        organization_id: invitation.organization_id,
-        user_id: userId,
-        role: invitation.role,
-        email: invitation.email,
-        name: invitation.name,
-        is_first_login: false,
-        pending: false
+      .update({ 
+        user_id: currentUserId,
+        updated_at: new Date().toISOString()
       })
+      .eq("id", invitation.id)
       .select()
       .single();
 
-    if (addError) {
-      console.error("Erro ao adicionar membro:", addError);
+    if (updateError) {
+      console.error("Erro ao atualizar membro:", updateError);
       return new Response(
-        JSON.stringify({ error: "Erro ao adicionar usuário como membro" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "Erro ao aceitar convite" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // 4. Marcar convite como utilizado
-    const { error: updateError } = await supabase
-      .from("member_invitations")
-      .update({ used_at: new Date().toISOString() })
-      .eq("id", invitation.id);
-
-    if (updateError) {
-      console.error("Erro ao atualizar convite:", updateError);
-      // Não falhar a operação se esta parte falhar
-    }
+    console.log("Convite aceito com sucesso:", updatedMember);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: "Convite aceito com sucesso",
-        member 
+        member: updatedMember 
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
+
   } catch (error) {
-    console.error("Erro ao processar convite:", error);
+    console.error("Erro completo na função accept-invitation:", error);
     return new Response(
-      JSON.stringify({ error: "Erro ao processar convite" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ error: "Erro interno do servidor" }),
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 });

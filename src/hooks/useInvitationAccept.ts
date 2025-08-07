@@ -77,12 +77,12 @@ export const useInvitationAccept = (userId: string | undefined) => {
         } 
       });
       
-      // Sempre passamos true para skipEmailCheck para permitir que qualquer usuário aceite o convite
-      const result = await acceptInvitation(token, userId, data.password, true);
+      // Aceitar convite com nova assinatura
+      const result = await acceptInvitation(token, userId);
       
-      if (!result) {
-        console.error('[useInvitationAccept] Resultado da aceitação é nulo');
-        throw new Error('Erro ao aceitar convite');
+      if (!result.success) {
+        console.error('[useInvitationAccept] Falha ao aceitar convite:', result.message);
+        throw new Error(result.message || 'Erro ao aceitar convite');
       }
       
       console.log('[useInvitationAccept] Convite aceito com sucesso:', result);

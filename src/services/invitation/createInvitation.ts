@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { Invitation } from '@/types/invitation';
-import { v4 as uuidv4 } from 'uuid';
+import { sendInvitationEmail } from '@/services/emailService';
 
 export async function createInvitation(
   organizationId: string,
@@ -9,43 +9,73 @@ export async function createInvitation(
   role: string = 'member'
 ): Promise<Invitation> {
   try {
-    // Gerar token único para o convite
-    const token = uuidv4();
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // Expira em 7 dias
-
-    // Criar o convite na tabela organization_members como pendente
-    const { data: insertData, error: insertError } = await supabase
+    // Verificar se já existe convite pendente para este email na organização
+    const { data: existingInvite } = await supabase
       .from('organization_members')
-      .insert([
-        {
-          organization_id: organizationId,
-          email,
-          name,
-          role,
-          user_id: null // Será preenchido quando o usuário aceitar
-        }
-      ])
+      .select('id')
+      .eq('organization_id', organizationId)
+      .eq('email', email)
+      .is('user_id', null)
+      .single();
+
+    if (existingInvite) {
+      throw new Error('Já existe um convite pendente para este email nesta organização');
+    }
+
+    // Buscar nome da organização
+    const { data: organization } = await supabase
+      .from('organizations')
+      .select('name')
+      .eq('id', organizationId)
+      .single();
+
+    // Criar entrada na tabela organization_members (convite pendente)
+    const { data: member, error } = await supabase
+      .from('organization_members')
+      .insert([{
+        organization_id: organizationId,
+        email,
+        name,
+        role,
+        user_id: null // Pendente
+      }])
       .select()
       .single();
 
-    if (insertError) {
-      console.error('Erro ao criar convite:', insertError);
-      throw insertError;
+    if (error) {
+      console.error('Erro ao criar convite:', error);
+      throw error;
     }
 
-    // Retornar um objeto Invitation compatível
+    // Gerar link de convite
+    const baseUrl = window.location.origin;
+    const inviteLink = `${baseUrl}/accept-invite?token=${encodeURIComponent(email)}`;
+
+    // Enviar email de convite
+    const emailSent = await sendInvitationEmail(
+      email,
+      name,
+      organization?.name || 'Organização',
+      inviteLink,
+      role
+    );
+
+    if (!emailSent) {
+      console.warn('Falha ao enviar email de convite, mas convite foi criado');
+    }
+
+    // Retornar no formato Invitation
     return {
-      id: insertData.id,
+      id: member.id,
       organization_id: organizationId,
       email,
       name,
       role,
-      token,
-      expires_at: expiresAt.toISOString(),
-      invited_by: 'system', // Valor padrão
+      token: email, // Usando email como token
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      invited_by: 'system',
       used_at: null,
-      created_at: insertData.created_at,
+      created_at: member.created_at,
     };
   } catch (error) {
     console.error('Erro ao criar convite:', error);
