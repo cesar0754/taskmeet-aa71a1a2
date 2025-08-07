@@ -54,23 +54,30 @@ export const useProfile = () => {
   };
 
   const updateProfile = async (data: UpdateProfileData) => {
-    if (!user || !profile) return false;
+    if (!user || !profile) {
+      console.log('useProfile: updateProfile called but no user or profile:', { user: !!user, profile: !!profile });
+      return false;
+    }
 
     try {
+      console.log('useProfile: Starting profile update with data:', data);
       setUpdating(true);
       const updatedProfile = await profileService.updateProfile(user.id, data);
       
       if (updatedProfile) {
+        console.log('useProfile: Profile updated successfully:', updatedProfile);
         setProfile(updatedProfile);
         toast({
           title: 'Sucesso',
           description: 'Perfil atualizado com sucesso'
         });
         return true;
+      } else {
+        console.log('useProfile: Profile update returned null');
+        return false;
       }
-      return false;
     } catch (error) {
-      console.error('Erro ao atualizar perfil:', error);
+      console.error('useProfile: Error updating profile:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao atualizar perfil',
