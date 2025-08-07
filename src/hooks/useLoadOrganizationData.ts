@@ -1,12 +1,17 @@
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
+import { organizationCache } from '@/lib/cache';
 import { 
   fetchUserOrganizations, 
   fetchOrganizationMembers
 } from '@/services/organization/organizationService';
 
+// Rastreamento global de requisições em andamento
+const loadingRequests = new Set<string>();
+
 /**
  * Hook que gerencia o carregamento de dados da organização e seus membros
+ * com cache para evitar requisições repetidas
  */
 export async function loadOrganizationData(
   user: User | null, 
@@ -22,14 +27,38 @@ export async function loadOrganizationData(
     return;
   }
 
+  const cacheKey = `org-${user.id}`;
+  
+  // Verifica se já existe uma requisição em andamento
+  if (loadingRequests.has(cacheKey)) {
+    return;
+  }
+
+  // Verifica cache primeiro
+  const cachedData = organizationCache.get(cacheKey);
+  if (cachedData) {
+    setOrganization(cachedData.organization);
+    setMembers(cachedData.members);
+    setLoading(false);
+    return;
+  }
+
   try {
     setLoading(true);
+    loadingRequests.add(cacheKey);
     
     const selectedOrg = await fetchUserOrganizations(user.id);
     
     if (selectedOrg) {
-      setOrganization(selectedOrg);
       const orgMembers = await fetchOrganizationMembers(selectedOrg.id);
+      
+      // Cache os dados
+      organizationCache.set(cacheKey, {
+        organization: selectedOrg,
+        members: orgMembers
+      });
+      
+      setOrganization(selectedOrg);
       setMembers(orgMembers);
     }
   } catch (error) {
@@ -41,5 +70,6 @@ export async function loadOrganizationData(
     });
   } finally {
     setLoading(false);
+    loadingRequests.delete(cacheKey);
   }
 }

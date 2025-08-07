@@ -24,7 +24,7 @@ export async function fetchDashboardStats(organizationId: string): Promise<Dashb
 
     // Busca contagem de grupos
     const { count: groupsCount, error: groupsError } = await supabase
-      .from('work_groups')
+      .from('groups')
       .select('*', { count: 'exact', head: true })
       .eq('organization_id', organizationId);
 

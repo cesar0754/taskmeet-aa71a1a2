@@ -1,11 +1,9 @@
 
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../types/supabase';
+// Use integrated supabase client
+import { supabase } from '@/integrations/supabase/client';
 
-const supabaseUrl = 'https://tistxxdthzlpldrdipzy.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpc3R4eGR0aHpscGxkcmRpcHp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MjI5MjAsImV4cCI6MjA1OTA5ODkyMH0.vPeAkzdu8457e-5pzfeikKxYhF3yqLyyWX46NTd1rwM';
-
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+// Re-export for compatibility
+export { supabase };
 
 // Definindo um tipo que seja compatível com o tipo User do Supabase
 export type UserAttributes = {
