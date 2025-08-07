@@ -134,6 +134,45 @@ export type Database = {
         }
         Relationships: []
       }
+      member_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          name: string
+          organization_id: string
+          role: string
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          name: string
+          organization_id: string
+          role?: string
+          status?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          role?: string
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
