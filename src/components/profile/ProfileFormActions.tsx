@@ -6,6 +6,7 @@ interface ProfileFormActionsProps {
   uploading: boolean;
   onEdit: () => void;
   onCancel: () => void;
+  onSubmit?: () => void;
 }
 
 export const ProfileFormActions = ({
@@ -13,7 +14,8 @@ export const ProfileFormActions = ({
   updating,
   uploading,
   onEdit,
-  onCancel
+  onCancel,
+  onSubmit
 }: ProfileFormActionsProps) => {
   return (
     <div className="flex space-x-2">
@@ -31,7 +33,8 @@ export const ProfileFormActions = ({
       ) : (
         <>
           <Button
-            type="submit"
+            type="button"
+            onClick={onSubmit}
             disabled={updating || uploading}
           >
             {(updating || uploading) ? 'Salvando...' : 'Salvar'}

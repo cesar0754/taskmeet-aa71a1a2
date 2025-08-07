@@ -116,8 +116,9 @@ export const ProfileForm = ({ profile, onUpdate, updating }: ProfileFormProps) =
   };
 
   const handleEdit = () => {
-    console.log('ProfileForm: Edit triggered');
+    console.log('ProfileForm: Edit triggered, setting isEditing to true');
     setIsEditing(true);
+    console.log('ProfileForm: isEditing state after setIsEditing:', true);
   };
 
   return (
@@ -145,15 +146,16 @@ export const ProfileForm = ({ profile, onUpdate, updating }: ProfileFormProps) =
             isEditing={isEditing}
             avatarFile={avatarFile}
           />
-
-          <ProfileFormActions
-            isEditing={isEditing}
-            updating={updating}
-            uploading={uploading}
-            onEdit={handleEdit}
-            onCancel={handleCancel}
-          />
         </form>
+
+        <ProfileFormActions
+          isEditing={isEditing}
+          updating={updating}
+          uploading={uploading}
+          onEdit={handleEdit}
+          onCancel={handleCancel}
+          onSubmit={handleSubmit(onSubmit)}
+        />
       </CardContent>
     </Card>
   );

@@ -25,6 +25,8 @@ export const AvatarUpload = ({
   onRemoveAvatar
 }: AvatarUploadProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  console.log('AvatarUpload: Rendering with isEditing:', isEditing);
 
   const getInitials = (name: string) => {
     return name
@@ -60,7 +62,10 @@ export const AvatarUpload = ({
               size="sm"
               variant="secondary"
               className="h-8 w-8 p-0 rounded-full"
-              onClick={handleUploadClick}
+              onClick={() => {
+                console.log('AvatarUpload: Upload button clicked, isEditing:', isEditing);
+                handleUploadClick();
+              }}
               disabled={uploading}
             >
               <Upload className="h-4 w-4" />
@@ -72,7 +77,10 @@ export const AvatarUpload = ({
                 size="sm"
                 variant="destructive"
                 className="h-8 w-8 p-0 rounded-full"
-                onClick={onRemoveAvatar}
+                onClick={() => {
+                  console.log('AvatarUpload: Remove button clicked');
+                  onRemoveAvatar();
+                }}
                 disabled={uploading}
               >
                 <Trash2 className="h-4 w-4" />
