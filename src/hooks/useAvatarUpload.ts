@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 export const useAvatarUpload = () => {
@@ -8,6 +8,7 @@ export const useAvatarUpload = () => {
 
   const uploadAvatar = async (file: File, userId: string): Promise<string | null> => {
     try {
+      console.log('useAvatarUpload: Starting upload for file:', file.name, 'User:', userId);
       setUploading(true);
 
       // Verificar se o arquivo é uma imagem

@@ -21,9 +21,13 @@ export const useProfile = () => {
   }, [user]);
 
   const loadProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('useProfile: No user found');
+      return;
+    }
     
     try {
+      console.log('useProfile: Loading profile for user:', user.id);
       setLoading(true);
       const profileData = await profileService.getProfile(user.id);
       

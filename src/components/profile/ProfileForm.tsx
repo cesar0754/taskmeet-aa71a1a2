@@ -25,6 +25,7 @@ interface ProfileFormProps {
 }
 
 export const ProfileForm = ({ profile, onUpdate, updating }: ProfileFormProps) => {
+  console.log('ProfileForm: Rendering with profile:', profile);
   const [isEditing, setIsEditing] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -83,12 +84,15 @@ export const ProfileForm = ({ profile, onUpdate, updating }: ProfileFormProps) =
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('ProfileForm: File input changed');
     const file = event.target.files?.[0];
     if (file) {
+      console.log('ProfileForm: File selected:', file.name, file.type, file.size);
       setAvatarFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
         setPreviewUrl(e.target?.result as string);
+        console.log('ProfileForm: Preview URL set');
       };
       reader.readAsDataURL(file);
     }
@@ -143,7 +147,10 @@ export const ProfileForm = ({ profile, onUpdate, updating }: ProfileFormProps) =
                   size="sm"
                   variant="secondary"
                   className="h-8 w-8 p-0 rounded-full"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    console.log('ProfileForm: Upload button clicked');
+                    fileInputRef.current?.click();
+                  }}
                   disabled={uploading}
                 >
                   <Upload className="h-4 w-4" />
@@ -217,7 +224,10 @@ export const ProfileForm = ({ profile, onUpdate, updating }: ProfileFormProps) =
             {!isEditing ? (
               <Button
                 type="button"
-                onClick={() => setIsEditing(true)}
+                onClick={() => {
+                  console.log('ProfileForm: Editar Perfil clicked');
+                  setIsEditing(true);
+                }}
                 variant="outline"
               >
                 Editar Perfil
