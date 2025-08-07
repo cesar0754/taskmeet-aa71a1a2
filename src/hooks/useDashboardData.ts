@@ -36,16 +36,14 @@ export const useDashboardData = () => {
         const dashboardStats = await fetchDashboardStats(organization.id);
         setStats(dashboardStats);
 
-        // Busca reuniões próximas (próximas 7 dias)
+        // Busca próximas reuniões (limitado a 3 mais próximas)
         const now = new Date();
-        const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
         
         const { data: meetingsData } = await supabase
           .from('meetings')
           .select('*')
           .eq('organization_id', organization.id)
           .gte('start_time', now.toISOString())
-          .lte('start_time', nextWeek.toISOString())
           .order('start_time', { ascending: true })
           .limit(3);
 
