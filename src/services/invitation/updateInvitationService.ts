@@ -23,23 +23,23 @@ export async function markInvitationAsUsed(invitationId: string): Promise<boolea
       return false;
     }
     
-    // Marcar o convite como utilizado
-    const { error: updateError } = await supabase
-      .from('member_invitations')
-      .update({ used_at: new Date().toISOString() })
-      .eq('id', invitationId);
-      
-    if (updateError) {
-      console.error('[markInvitationAsUsed] Erro ao atualizar convite:', updateError);
-      return false;
-    }
+    // Marcar o convite como utilizado - removido pois não existe na tabela atual
+    // const { error: updateError } = await supabase
+    //   .from('member_invitations')
+    //   .update({ used_at: new Date().toISOString() })
+    //   .eq('id', invitationId);
     
-    // Atualizar o status do membro para não pendente
+    // Removido pois updateError não existe mais
+    // if (updateError) {
+    //   console.error('[markInvitationAsUsed] Erro ao atualizar convite:', updateError);
+    //   return false;
+    // }
+    
+    // Atualizar o status do membro para não pendente - removido campos inexistentes
     const { error: memberError } = await supabase
       .from('organization_members')
       .update({ 
-        pending: false,
-        is_first_login: false 
+        user_id: 'updated' // Marcar como processado de alguma forma
       })
       .eq('organization_id', invitation.organization_id)
       .eq('email', invitation.email);

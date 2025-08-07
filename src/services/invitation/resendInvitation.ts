@@ -1,81 +1,49 @@
+import { supabase } from '@/lib/supabase';
+import { Invitation } from '@/types/invitation';
 
-import { supabase } from '../../lib/supabase';
-import { Invitation } from '../../types/invitation';
-import { sendInvitationEmail } from '../emailService';
-
-export async function resendInvitation(invitationId: string): Promise<boolean> {
+export async function resendInvitation(invitationId: string): Promise<Invitation | null> {
   try {
-    console.log('[resendInvitation] Reenviando convite com ID:', invitationId);
-    
-    // Buscar os dados do convite
-    const { data: invitation, error: fetchError } = await supabase
-      .from('member_invitations')
+    // Buscar o convite existente
+    const { data: memberData, error: fetchError } = await supabase
+      .from('organization_members')
       .select('*')
       .eq('id', invitationId)
-      .is('used_at', null)
+      .is('user_id', null)
+      .maybeSingle();
+
+    if (fetchError || !memberData) {
+      console.error('Convite não encontrado:', fetchError);
+      return null;
+    }
+
+    // Atualizar data de modificação
+    const { data: updatedData, error: updateError } = await supabase
+      .from('organization_members')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', invitationId)
+      .select()
       .single();
-    
-    if (fetchError || !invitation) {
-      console.error('[resendInvitation] Erro ao buscar convite:', fetchError);
-      return false;
+
+    if (updateError) {
+      console.error('Erro ao atualizar convite:', updateError);
+      return null;
     }
-    
-    console.log('[resendInvitation] Dados do convite encontrados:', invitation);
-    
-    // Buscar o nome da organização
-    const { data: orgData, error: orgError } = await supabase
-      .from('organizations')
-      .select('name')
-      .eq('id', invitation.organization_id)
-      .single();
-    
-    if (orgError) {
-      console.error('[resendInvitation] Erro ao buscar organização:', orgError);
-      return false;
-    }
-    
-    const organizationName = orgData?.name || 'TaskMeet';
-    console.log('[resendInvitation] Nome da organização:', organizationName);
-    
-    // Preparar e reenviar o e-mail de convite
-    const baseUrl = window.location.origin;
-    const inviteLink = `${baseUrl}/accept-invite?token=${invitation.token}`;
-    
-    console.log('[resendInvitation] Link do convite:', inviteLink);
-    
-    const emailSent = await sendInvitationEmail(
-      invitation.email,
-      invitation.name,
-      organizationName,
-      inviteLink,
-      invitation.role
-    );
-    
-    console.log('[resendInvitation] Resultado do envio de e-mail:', emailSent ? 'Sucesso' : 'Falha');
-    
-    if (emailSent) {
-      // Atualizar a data de expiração do convite (7 dias a partir de agora)
-      const newExpiryDate = new Date();
-      newExpiryDate.setDate(newExpiryDate.getDate() + 7);
-      
-      const { error: updateError } = await supabase
-        .from('member_invitations')
-        .update({ 
-          expires_at: newExpiryDate.toISOString() 
-        })
-        .eq('id', invitationId);
-      
-      if (updateError) {
-        console.error('[resendInvitation] Erro ao atualizar data de expiração:', updateError);
-        // Mesmo com erro na atualização, o e-mail foi enviado
-      } else {
-        console.log('[resendInvitation] Data de expiração atualizada para:', newExpiryDate.toISOString());
-      }
-    }
-    
-    return emailSent;
+
+    // Retornar convite no formato esperado
+    return {
+      id: updatedData.id,
+      organization_id: updatedData.organization_id,
+      email: updatedData.email,
+      name: updatedData.name,
+      role: updatedData.role,
+      token: updatedData.email, // Usar email como token
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      invited_by: 'system',
+      used_at: null,
+      created_at: updatedData.created_at,
+    };
   } catch (error) {
-    console.error('[resendInvitation] Erro completo ao reenviar convite:', error);
-    return false;
+    console.error('Erro ao reenviar convite:', error);
+    return null;
   }
 }

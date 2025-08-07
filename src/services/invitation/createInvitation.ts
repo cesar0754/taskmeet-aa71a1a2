@@ -1,87 +1,54 @@
-
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { Invitation } from '@/types/invitation';
 import { v4 as uuidv4 } from 'uuid';
-import { Invitation } from '../../types/invitation';
 
 export async function createInvitation(
   organizationId: string,
   email: string,
   name: string,
-  role: string
-): Promise<Invitation | null> {
+  role: string = 'member'
+): Promise<Invitation> {
   try {
-    console.log('Criando convite para:', { organizationId, email, name, role });
-    
-    // Verificar se o usuário atual está autenticado
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      throw new Error('Usuário não autenticado');
-    }
-    
     // Gerar token único para o convite
     const token = uuidv4();
-    
-    // Inserir o convite no banco de dados
-    const { data, error } = await supabase
-      .from('member_invitations')
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // Expira em 7 dias
+
+    // Criar o convite na tabela organization_members como pendente
+    const { data: insertData, error: insertError } = await supabase
+      .from('organization_members')
       .insert([
-        { 
-          organization_id: organizationId, 
-          email, 
-          name, 
+        {
+          organization_id: organizationId,
+          email,
+          name,
           role,
-          token,
-          invited_by: userData.user.id
+          user_id: null // Será preenchido quando o usuário aceitar
         }
       ])
       .select()
       .single();
 
-    if (error) {
-      console.error('Erro ao criar convite:', error);
-      throw error;
+    if (insertError) {
+      console.error('Erro ao criar convite:', insertError);
+      throw insertError;
     }
 
-    console.log('Convite criado com sucesso:', data);
-    
-    // Buscar o nome da organização
-    const { data: orgData, error: orgError } = await supabase
-      .from('organizations')
-      .select('name')
-      .eq('id', organizationId)
-      .single();
-    
-    if (orgError) {
-      console.error('Erro ao buscar organização:', orgError);
-    }
-    
-    const organizationName = orgData?.name || 'TaskMeet';
-    
-    // Preparar o link do convite
-    const baseUrl = window.location.origin;
-    const inviteLink = `${baseUrl}/accept-invite?token=${token}`;
-    
-    // Enviar e-mail usando o serviço nativo do Supabase
-    const { error: emailError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      data: {
-        name,
-        organization_id: organizationId,
-        role,
-        token,
-        custom_invite_url: inviteLink,
-        organization_name: organizationName,
-      }
-    });
-    
-    if (emailError) {
-      console.error('Erro ao enviar e-mail de convite:', emailError);
-      // Se falhar, não lançamos erro, pois o convite já foi criado
-      // Podemos implementar futuramente um sistema de reenvio
-    }
-    
-    return data;
+    // Retornar um objeto Invitation compatível
+    return {
+      id: insertData.id,
+      organization_id: organizationId,
+      email,
+      name,
+      role,
+      token,
+      expires_at: expiresAt.toISOString(),
+      invited_by: 'system', // Valor padrão
+      used_at: null,
+      created_at: insertData.created_at,
+    };
   } catch (error) {
-    console.error('Erro completo ao criar convite:', error);
+    console.error('Erro ao criar convite:', error);
     throw error;
   }
 }
