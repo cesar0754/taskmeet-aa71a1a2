@@ -53,22 +53,10 @@ const App = () => {
             <Toaster />
             <Sonner />
             <Routes>
-              {/* Páginas públicas - redirecionam para dashboard se logado */}
-              <Route path="/" element={
-                <PublicRoute>
-                  <LandingPage />
-                </PublicRoute>
-              } />
-              <Route path="/login" element={
-                <PublicRoute>
-                  <LoginPage />
-                </PublicRoute>
-              } />
-              <Route path="/register" element={
-                <PublicRoute>
-                  <RegisterPage />
-                </PublicRoute>
-              } />
+              {/* Páginas públicas - temporariamente sem guards */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
               
               {/* Páginas que funcionam sem autenticação */}
               <Route path="/accept-invite" element={<AcceptInvitePage />} />
