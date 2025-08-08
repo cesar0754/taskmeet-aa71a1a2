@@ -40,14 +40,14 @@ const RegisterForm: React.FC = () => {
     try {
       setIsLoading(true);
       await signUp(values.email, values.password, values.name);
-      navigate('/create-organization');
+      // Após cadastro, instruir o usuário a verificar o e-mail
+      navigate(`/verify-email?email=${encodeURIComponent(values.email)}`);
     } catch (error) {
       console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

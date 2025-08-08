@@ -14,6 +14,7 @@ import AuthCallbackPage from "./pages/AuthCallbackPage";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 import CreateOrganizationPage from "./pages/CreateOrganizationPage";
 import Dashboard from "./pages/Dashboard";
 import MembersPage from "./pages/MembersPage";
@@ -74,6 +75,11 @@ const App = () => {
               <Route path="/register" element={
                 <PublicRoute>
                   <RegisterPage />
+                </PublicRoute>
+              } />
+              <Route path="/verify-email" element={
+                <PublicRoute>
+                  <VerifyEmailPage />
                 </PublicRoute>
               } />
               

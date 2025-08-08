@@ -35,8 +35,8 @@ export const useSignUp = () => {
       }
 
       toast({
-        title: 'Conta criada com sucesso',
-        description: 'Agora você pode criar sua organização.',
+        title: 'Conta criada! Verifique seu e-mail',
+        description: 'Enviamos um link de confirmação. Após confirmar, continuaremos o fluxo.',
       });
     } catch (error) {
       console.error('Error signing up:', error);
