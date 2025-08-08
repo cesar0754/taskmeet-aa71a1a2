@@ -10,6 +10,7 @@ import { OrganizationProvider } from "@/context/OrganizationContext";
 import { PublicRoute, ProtectedRoute } from "@/components/auth/RouteGuards";
 
 // Pages
+import AuthCallbackPage from "./pages/AuthCallbackPage";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -77,6 +78,7 @@ const App = () => {
               } />
               
               {/* Páginas que funcionam sem autenticação */}
+              <Route path="/auth/callback" element={<AuthCallbackPage />} />
               <Route path="/accept-invite" element={<AcceptInvitePage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/update-password" element={<UpdatePasswordPage />} />

@@ -21,6 +21,7 @@ export const useSignUp = () => {
           data: {
             name,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
