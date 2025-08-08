@@ -24,29 +24,36 @@ const BenefitItem: React.FC<BenefitItemProps> = ({ title, description }) => (
 const BenefitsSection: React.FC = () => {
   const benefits = [
     {
-      title: "Multi-organizações",
-      description: "Gerencie várias organizações com isolamento de dados e segurança entre elas."
+      title: "Economia de Tempo de até 70%",
+      description: "Automatize processos repetitivos e reduza drasticamente o tempo gasto em tarefas administrativas."
     },
     {
-      title: "Controle de Permissões",
-      description: "Sistema robusto de permissões para controlar o acesso a recursos e funcionalidades."
+      title: "Redução de 90% nos Conflitos",
+      description: "Comunicação clara e transparente elimina mal-entendidos e melhora o relacionamento entre membros."
     },
     {
-      title: "Integrações Úteis",
-      description: "Conecte-se com Google Calendar, WhatsApp e outros serviços essenciais."
+      title: "Aumento de 200% na Produtividade",
+      description: "Organize melhor as atividades e veja sua organização alcançar resultados extraordinários."
     },
     {
-      title: "Fácil de Usar",
-      description: "Interface intuitiva e amigável, projetada para maximizar a produtividade."
+      title: "Compliance e Transparência Total",
+      description: "Mantenha registros detalhados, atas automáticas e relatórios que garantem total transparência."
     }
   ];
 
   return (
-    <section className="py-16 bg-muted/50">
+    <section className="py-24 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">Por que escolher nossa plataforma?</h2>
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            Resultados que impressionam
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Não é só uma ferramenta, é uma transformação completa na forma como sua organização funciona.
+          </p>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {benefits.map((benefit, index) => (
             <BenefitItem key={index} title={benefit.title} description={benefit.description} />
           ))}
