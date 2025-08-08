@@ -13,12 +13,8 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     );
   }
 
-  // Se o usuário está logado, redireciona para o dashboard
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  // Se não está logado, mostra o conteúdo público (landing, login, register)
+  // Se o usuário está logado, mostra o conteúdo público (permitindo acesso a páginas como register que redirecionam)
+  // O redirecionamento será feito pela própria página
   return <>{children}</>;
 };
 
