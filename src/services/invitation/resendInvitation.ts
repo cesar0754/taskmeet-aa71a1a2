@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { Invitation } from '@/types/invitation';
+import { sendInvitationEmail } from '@/services/emailService';
 
 export async function resendInvitation(invitationId: string): Promise<Invitation | null> {
   try {
@@ -27,6 +28,32 @@ export async function resendInvitation(invitationId: string): Promise<Invitation
     if (updateError) {
       console.error('Erro ao atualizar convite:', updateError);
       return null;
+    }
+
+    // Enviar e-mail de convite novamente via Edge Function (Resend)
+    try {
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('name')
+        .eq('id', updatedData.organization_id)
+        .single();
+
+      const baseUrl = window.location.origin;
+      const inviteLink = `${baseUrl}/accept-invite?token=${encodeURIComponent(updatedData.email)}`;
+
+      const emailSent = await sendInvitationEmail(
+        updatedData.email,
+        updatedData.name,
+        orgData?.name || 'Organização',
+        inviteLink,
+        updatedData.role
+      );
+
+      if (!emailSent) {
+        console.warn('Falha ao reenviar e-mail de convite');
+      }
+    } catch (e) {
+      console.error('Erro ao tentar reenviar e-mail de convite:', e);
     }
 
     // Retornar convite no formato esperado
