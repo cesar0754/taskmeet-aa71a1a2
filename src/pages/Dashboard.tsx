@@ -71,13 +71,8 @@ const Dashboard: React.FC = () => {
     loadSpecificOrganization();
   }, [user, organization, location.search, navigate, setCurrentOrganization]);
   
-  // Se não houver usuário, redirecionamos para login
+  // Se não houver usuário, o ProtectedRoute já vai redirecionar para "/"
   if (!user) {
-    // Usamos useEffect para navegação ao invés de fazer durante a renderização
-    useEffect(() => {
-      navigate('/login');
-    }, [navigate]);
-    
     return null;
   }
   

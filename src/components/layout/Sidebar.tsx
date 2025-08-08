@@ -36,8 +36,8 @@ const AppSidebar: React.FC = () => {
   
   const handleSignOut = async () => {
     try {
+      // O hook useSignOut já faz o redirecionamento para "/" automaticamente
       await signOut();
-      navigate('/login');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }
