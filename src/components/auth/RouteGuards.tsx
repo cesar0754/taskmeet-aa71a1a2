@@ -5,8 +5,6 @@ import { useAuth } from '@/context/AuthContext';
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
 
-  console.log('PublicRoute - loading:', loading, 'user:', user?.email);
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -17,19 +15,15 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // Se o usuário está logado, redireciona para o dashboard
   if (user) {
-    console.log('PublicRoute - Redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
 
-  console.log('PublicRoute - Showing public content');
-  // Se não está logado, mostra o conteúdo público
+  // Se não está logado, mostra o conteúdo público (landing, login, register)
   return <>{children}</>;
 };
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
-
-  console.log('ProtectedRoute - loading:', loading, 'user:', user?.email);
 
   if (loading) {
     return (
@@ -39,13 +33,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
 
-  // Se não está logado, redireciona para a landing page
+  // Se não está logado, redireciona para a LANDING PAGE (não para login)
   if (!user) {
-    console.log('ProtectedRoute - Redirecting to landing page');
     return <Navigate to="/" replace />;
   }
 
-  console.log('ProtectedRoute - Showing protected content');
   // Se está logado, mostra o conteúdo protegido
   return <>{children}</>;
 };
