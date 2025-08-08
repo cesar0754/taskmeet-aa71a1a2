@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { OrganizationProvider } from "@/context/OrganizationContext";
+import { PublicRoute, ProtectedRoute } from "@/components/auth/RouteGuards";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -52,25 +53,44 @@ const App = () => {
             <Toaster />
             <Sonner />
             <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+              {/* Páginas públicas - redirecionam para dashboard se logado */}
+              <Route path="/" element={
+                <PublicRoute>
+                  <LandingPage />
+                </PublicRoute>
+              } />
+              <Route path="/login" element={
+                <PublicRoute>
+                  <LoginPage />
+                </PublicRoute>
+              } />
+              <Route path="/register" element={
+                <PublicRoute>
+                  <RegisterPage />
+                </PublicRoute>
+              } />
+              
+              {/* Páginas que funcionam sem autenticação */}
               <Route path="/accept-invite" element={<AcceptInvitePage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/update-password" element={<UpdatePasswordPage />} />
               
-              {/* Rota de criação de organização dentro do OrganizationProvider */}
+              {/* Rota de criação de organização - protegida */}
               <Route path="/create-organization" element={
-                <OrganizationProvider>
-                  <CreateOrganizationPage />
-                </OrganizationProvider>
+                <ProtectedRoute>
+                  <OrganizationProvider>
+                    <CreateOrganizationPage />
+                  </OrganizationProvider>
+                </ProtectedRoute>
               } />
               
               {/* Rotas protegidas dentro do OrganizationProvider */}
               <Route path="/*" element={
-                <OrganizationProvider>
-                  <ProtectedRoutes />
-                </OrganizationProvider>
+                <ProtectedRoute>
+                  <OrganizationProvider>
+                    <ProtectedRoutes />
+                  </OrganizationProvider>
+                </ProtectedRoute>
               } />
               
               <Route path="*" element={<NotFound />} />

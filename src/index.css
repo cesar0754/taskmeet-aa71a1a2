@@ -110,5 +110,17 @@
 @layer components {
   .main-container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Grid pattern for background decoration */
+.bg-grid-pattern {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+@media (max-width: 768px) {
+  .bg-grid-pattern {
+    background-size: 30px 30px;
   }
 }
