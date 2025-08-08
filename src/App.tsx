@@ -2,6 +2,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
@@ -19,6 +20,7 @@ import GroupsPage from "./pages/GroupsPage";
 import TasksPage from "./pages/TasksPage";
 import MeetingsPage from "./pages/MeetingsPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import AcceptInvitePage from "./pages/AcceptInvitePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -33,11 +35,12 @@ const ProtectedRoutes = () => {
   return (
     <Routes>
       <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/tasks" element={<TasksPage />} />
-          <Route path="/meetings" element={<MeetingsPage />} />
+      <Route path="/tasks" element={<TasksPage />} />
+      <Route path="/meetings" element={<MeetingsPage />} />
       <Route path="/members" element={<MembersPage />} />
       <Route path="/groups" element={<GroupsPage />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/settings" element={<SettingsPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
@@ -47,9 +50,10 @@ const ProtectedRoutes = () => {
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <TooltipProvider>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <BrowserRouter>
+          <AuthProvider>
+            <TooltipProvider>
             <Toaster />
             <Sonner />
             <Routes>
@@ -100,6 +104,7 @@ const App = () => {
           </TooltipProvider>
         </AuthProvider>
       </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
