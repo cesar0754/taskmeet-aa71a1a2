@@ -13,37 +13,52 @@ export const useAuthState = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = async () => {
-      setLoading(true);
+    let mounted = true;
+    
+    // Configurar o listener para mudanças de autenticação PRIMEIRO
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (!mounted) return;
       
+      console.log('Auth state changed:', event, newSession?.user?.email);
+      
+      if (newSession) {
+        setSession(newSession);
+        setUser(newSession.user);
+      } else {
+        setSession(null);
+        setUser(null);
+      }
+      setLoading(false);
+    });
+    
+    // DEPOIS verificar se já existe uma sessão
+    const getInitialSession = async () => {
       try {
-        // Configurar o listener para mudanças de autenticação PRIMEIRO
-        const { data } = supabase.auth.onAuthStateChange((event, newSession) => {
-          if (newSession) {
-            setSession(newSession);
-            setUser(newSession.user);
-          } else {
-            setSession(null);
-            setUser(null);
-          }
-        });
-        
-        // DEPOIS verificar se já existe uma sessão
         const { data: sessionData } = await supabase.auth.getSession();
+        if (!mounted) return;
+        
+        console.log('Initial session:', sessionData.session?.user?.email);
+        
         setSession(sessionData.session);
         setUser(sessionData.session?.user || null);
-        
-        return () => {
-          data.subscription.unsubscribe();
-        };
       } catch (error) {
-        console.error('Erro ao inicializar a autenticação:', error);
+        console.error('Erro ao obter sessão inicial:', error);
+        if (!mounted) return;
+        setSession(null);
+        setUser(null);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
-    initAuth();
+    getInitialSession();
+    
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { user, session, loading };
