@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { Invitation } from '@/types/invitation';
 import { sendInvitationEmail } from '@/services/emailService';
 
-export async function resendInvitation(invitationId: string): Promise<Invitation | null> {
+export async function resendInvitation(invitationId: string): Promise<boolean> {
   try {
     // Buscar o convite existente
     const { data: memberData, error: fetchError } = await supabase
@@ -14,7 +14,7 @@ export async function resendInvitation(invitationId: string): Promise<Invitation
 
     if (fetchError || !memberData) {
       console.error('Convite não encontrado:', fetchError);
-      return null;
+      return false;
     }
 
     // Atualizar data de modificação
@@ -27,50 +27,34 @@ export async function resendInvitation(invitationId: string): Promise<Invitation
 
     if (updateError) {
       console.error('Erro ao atualizar convite:', updateError);
-      return null;
+      return false;
     }
 
     // Enviar e-mail de convite novamente via Edge Function (Resend)
-    try {
-      const { data: orgData } = await supabase
-        .from('organizations')
-        .select('name')
-        .eq('id', updatedData.organization_id)
-        .single();
+    const { data: orgData } = await supabase
+      .from('organizations')
+      .select('name')
+      .eq('id', updatedData.organization_id)
+      .single();
 
-      const baseUrl = window.location.origin;
-      const inviteLink = `${baseUrl}/accept-invite?token=${encodeURIComponent(updatedData.email)}`;
+    const baseUrl = window.location.origin;
+    const inviteLink = `${baseUrl}/accept-invite?token=${encodeURIComponent(updatedData.email)}`;
 
-      const emailSent = await sendInvitationEmail(
-        updatedData.email,
-        updatedData.name,
-        orgData?.name || 'Organização',
-        inviteLink,
-        updatedData.role
-      );
+    const emailSent = await sendInvitationEmail(
+      updatedData.email,
+      updatedData.name,
+      orgData?.name || 'Organização',
+      inviteLink,
+      updatedData.role
+    );
 
-      if (!emailSent) {
-        console.warn('Falha ao reenviar e-mail de convite');
-      }
-    } catch (e) {
-      console.error('Erro ao tentar reenviar e-mail de convite:', e);
+    if (!emailSent) {
+      console.warn('[resendInvitation] Falha ao reenviar e-mail (Edge Function deve ter retornado erro).');
     }
 
-    // Retornar convite no formato esperado
-    return {
-      id: updatedData.id,
-      organization_id: updatedData.organization_id,
-      email: updatedData.email,
-      name: updatedData.name,
-      role: updatedData.role,
-      token: updatedData.email, // Usar email como token
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      invited_by: 'system',
-      used_at: null,
-      created_at: updatedData.created_at,
-    };
+    return emailSent;
   } catch (error) {
     console.error('Erro ao reenviar convite:', error);
-    return null;
+    return false;
   }
 }
