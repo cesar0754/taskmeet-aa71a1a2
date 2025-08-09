@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Invitation } from '@/types/invitation';
+import { acceptInvitation } from '@/services/invitation/acceptInvitation';
 
 interface InvitationProcessingFormProps {
   invitation: Invitation;
@@ -25,21 +25,17 @@ const InvitationProcessingForm: React.FC<InvitationProcessingFormProps> = ({ inv
       
       console.log('[InvitationProcessingForm] Aceitando convite com token:', token);
       
-      // Chamar a função do Supabase para aceitar o convite
-      const { data, error: functionError } = await supabase.functions.invoke('accept-invitation', {
-        body: { 
-          token,
-          userId: 'default' // O valor será substituído na Edge Function pelo usuário atual
-        }
-      });
-      
-      if (functionError) {
-        console.error('[InvitationProcessingForm] Erro ao aceitar convite:', functionError);
-        setError('Ocorreu um erro ao aceitar o convite. Por favor, tente novamente.');
+      // Usar o serviço que envia o JWT no header e trata respostas
+      const result = await acceptInvitation(token);
+
+      if (!result.success) {
+        console.error('[InvitationProcessingForm] Falha ao aceitar convite:', result.message);
+        setError(result.message || 'Ocorreu um erro ao aceitar o convite. Por favor, tente novamente.');
         return;
       }
-      
-      console.log('[InvitationProcessingForm] Convite aceito com sucesso:', data);
+
+      console.log('[InvitationProcessingForm] Convite aceito com sucesso:', result);
+
       
       toast({
         title: 'Convite aceito',

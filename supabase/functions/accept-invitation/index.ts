@@ -20,16 +20,17 @@ serve(async (req) => {
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      // Use service role to bypass RLS securely inside the Edge Function
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { token, userId }: AcceptInvitationRequest = await req.json();
+    const { token }: AcceptInvitationRequest = await req.json();
     
-    console.log("Processando aceitação de convite:", { token, userId });
+    console.log("Processando aceitação de convite:", { token });
 
-    let currentUserId = userId;
+    let currentUserId: string | undefined = undefined;
 
-    // Se userId não foi fornecido, extrair do JWT
+    // Extrair do JWT obrigatoriamente
     if (!currentUserId) {
       const authHeader = req.headers.get("Authorization");
       if (authHeader) {
