@@ -27,4 +27,5 @@ export interface OrganizationContextType {
   updateMember: (id: string, data: Partial<Member>) => Promise<boolean>;
   removeMember: (id: string) => Promise<boolean>;
   setCurrentOrganization: (org: Organization) => void;
+  refreshMembers: () => Promise<void>;
 }

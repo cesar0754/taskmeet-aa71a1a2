@@ -5,6 +5,8 @@ import { useOrganizationData } from '@/hooks/useOrganizationData';
 import { Organization, Member, OrganizationContextType } from '@/types/organization';
 import { useOrganizationActions } from '@/hooks/useOrganizationActions';
 import { useMemberActions } from '@/hooks/useMemberActions';
+import { fetchOrganizationMembers } from '@/services/organization';
+import { organizationCache } from '@/lib/cache';
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
@@ -41,6 +43,21 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return removeMemberAction(id, setMembers);
   }, [removeMemberAction, setMembers]);
 
+  // Força recarregar membros do servidor e atualiza cache
+  const refreshMembers = useCallback(async () => {
+    if (!organization) return;
+    try {
+      const latest = await fetchOrganizationMembers(organization.id);
+      setMembers(latest);
+      if (user) {
+        organizationCache.delete(`org-${user.id}`);
+        organizationCache.set(`org-${user.id}`, { organization, members: latest });
+      }
+    } catch (e) {
+      console.error('Erro ao recarregar membros:', e);
+    }
+  }, [organization, setMembers, user]);
+
   // Combine data and actions to provide complete context
   const contextValue: OrganizationContextType = {
     organization,
@@ -51,7 +68,8 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     addMember,
     updateMember,
     removeMember,
-    setCurrentOrganization
+    setCurrentOrganization,
+    refreshMembers,
   };
 
   return (

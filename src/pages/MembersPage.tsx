@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserPlus } from 'lucide-react';
 
 const MembersPage: React.FC = () => {
-  const { organization, loading } = useOrganization();
+  const { organization, loading, refreshMembers } = useOrganization();
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('members');
   const [refreshKey, setRefreshKey] = useState(0);
@@ -35,6 +35,13 @@ const MembersPage: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [open, refreshPage]);
+
+  // Recarrega membros do servidor quando trocamos de aba ou quando o refreshKey muda
+  React.useEffect(() => {
+    if (activeTab === 'members') {
+      refreshMembers?.();
+    }
+  }, [activeTab, refreshKey, refreshMembers]);
 
   if (loading) {
     return (
