@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -22,6 +22,12 @@ const AcceptInvitePage: React.FC = () => {
   // Usar o hook personalizado para buscar os detalhes do convite
   const { invitation, loading, error } = useInvitation(token);
 
+  useEffect(() => {
+    // Permite abrir diretamente o formulário de registro via query param
+    if (new URLSearchParams(location.search).get('register') === '1') {
+      setShowRegistrationForm(true);
+    }
+  }, [location.search]);
   // Determinar qual formulário mostrar com base no estado do usuário
   const shouldShowRegistrationForm = !user && invitation && showRegistrationForm;
   const shouldShowProcessingForm = user && invitation && showRegistrationForm;

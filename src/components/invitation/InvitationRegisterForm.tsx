@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Invitation } from '@/types/invitation';
+import { profileService } from '@/services/profileService';
 
 const registerSchema = z.object({
   password: z.string()
@@ -51,15 +52,11 @@ const InvitationRegisterForm: React.FC<InvitationRegisterFormProps> = ({ invitat
       
       console.log('[InvitationRegisterForm] Registrando novo usuário para:', invitation.email);
       
-      // Registrar o novo usuário
+      // Registrar o novo usuário (dados básicos no meta)
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: invitation.email,
         password: values.password,
-        options: {
-          data: {
-            name: invitation.name
-          }
-        }
+        options: { data: { name: invitation.name } }
       });
       
       if (signUpError) {
@@ -67,43 +64,40 @@ const InvitationRegisterForm: React.FC<InvitationRegisterFormProps> = ({ invitat
         setError(signUpError.message);
         return;
       }
-      
-      if (!signUpData.user) {
-        setError('Falha ao criar usuário.');
+
+      // Fazer login para obter sessão antes de chamar a Edge Function
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: invitation.email,
+        password: values.password
+      });
+      if (signInError) {
+        console.error('[InvitationRegisterForm] Erro ao fazer login após registro:', signInError);
+        setError(signInError.message);
         return;
       }
-      
-      console.log('[InvitationRegisterForm] Usuário registrado com sucesso:', signUpData.user.id);
-      
-      // Aceitar o convite usando o serviço
-      const { acceptInvitation } = await import('@/services/invitation');
-      const result = await acceptInvitation(token, signUpData.user.id);
+
+      // Aceitar o convite usando a Edge Function (usa JWT atual)
+      const { acceptInvitation } = await import('@/services/invitation/acceptInvitation');
+      const result = await acceptInvitation(token, invitation.organization_id);
       
       if (!result.success) {
         console.error('[InvitationRegisterForm] Erro ao aceitar convite:', result.message);
         setError(result.message || 'Erro ao aceitar convite.');
         return;
       }
-      
-      console.log('[InvitationRegisterForm] Convite aceito com sucesso:', result);
-      
-      // Login automático
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: invitation.email,
-        password: values.password
-      });
-      
-      if (signInError) {
-        console.error('[InvitationRegisterForm] Erro ao fazer login automático:', signInError);
-        // Não interrompemos o fluxo se o login automático falhar
+
+      // Atualizar perfil com dados do convite
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          const { profileService } = await import('@/services/profileService');
+          await profileService.updateProfile(user.id, { name: invitation.name, email: invitation.email });
+        }
+      } catch (e) {
+        console.warn('[InvitationRegisterForm] Não foi possível atualizar o perfil:', e);
       }
       
-      toast({
-        title: 'Conta criada com sucesso',
-        description: 'Você agora é membro da organização!',
-      });
-      
-      // Redirecionar para o dashboard
+      toast({ title: 'Conta criada com sucesso', description: 'Você agora é membro da organização!' });
       navigate(`/dashboard?org=${invitation.organization_id}`);
     } catch (error: any) {
       console.error('[InvitationRegisterForm] Erro ao processar registro:', error);
