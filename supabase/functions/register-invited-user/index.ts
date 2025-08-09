@@ -63,18 +63,7 @@ serve(async (req) => {
       );
     }
 
-    // Checar se usuário já existe
-    const { data: existingUser } = await supabase.auth.admin.getUserByEmail(email);
-
-    if (existingUser?.user) {
-      // Não alteramos senha por segurança; apenas informamos que existe
-      return new Response(
-        JSON.stringify({ success: true, userExists: true, userId: existingUser.user.id }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
-      );
-    }
-
-    // Criar usuário já confirmado
+    // Tentar criar usuário já confirmado
     const { data: created, error: createErr } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -82,7 +71,17 @@ serve(async (req) => {
       user_metadata: { name, avatar_url },
     });
 
-    if (createErr || !created?.user) {
+    if (createErr) {
+      // Se o usuário já existir, retornamos um sinal para o frontend fazer login
+      const msg = String(createErr.message || "").toLowerCase();
+      if (createErr.status === 422 || msg.includes("already registered") || msg.includes("duplicate")) {
+        console.log("[register-invited-user] Usuário já existe, seguir para login");
+        return new Response(
+          JSON.stringify({ success: true, userExists: true }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
+        );
+      }
+
       console.error("[register-invited-user] Erro ao criar usuário:", createErr);
       return new Response(
         JSON.stringify({ success: false, error: "Não foi possível criar o usuário" }),
@@ -91,7 +90,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, userExists: false, userId: created.user.id }),
+      JSON.stringify({ success: true, userExists: false, userId: created?.user?.id }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
     );
   } catch (err) {
