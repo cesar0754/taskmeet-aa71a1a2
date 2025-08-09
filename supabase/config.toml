@@ -22,3 +22,6 @@ verify_jwt = false
 
 [functions.get-invitation]
 verify_jwt = false
+
+[functions.register-invited-user]
+verify_jwt = false

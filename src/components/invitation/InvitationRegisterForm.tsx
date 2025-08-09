@@ -51,33 +51,30 @@ const form = useForm<RegisterFormValues>({
     try {
       setIsProcessing(true);
       setError(null);
-      
-      console.log('[InvitationRegisterForm] Registrando novo usuário para:', invitation.email);
-      
-      // Registrar o novo usuário
-const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            name: invitation.name,
-          },
+      console.log('[InvitationRegisterForm] Registrando membro convidado via Edge Function');
+      const { data: registerData, error: registerError } = await supabase.functions.invoke('register-invited-user', {
+        body: {
+          token,
+          organizationId: invitation.organization_id,
+          email: values.email,
+          password: values.password,
+          name: invitation.name,
         },
       });
       
-      if (signUpError) {
-        console.error('[InvitationRegisterForm] Erro ao registrar usuário:', signUpError);
-        setError(signUpError.message);
+      if (registerError) {
+        console.error('[InvitationRegisterForm] Erro na Edge Function de registro:', registerError);
+        setError(registerError.message || 'Erro ao registrar usuário convidado.');
         return;
       }
       
-      if (!signUpData.user) {
-        setError('Falha ao criar usuário.');
+      if (!registerData?.success) {
+        console.error('[InvitationRegisterForm] Registro falhou:', registerData?.error);
+        setError(registerData?.error || 'Não foi possível registrar o usuário.');
         return;
       }
       
-      console.log('[InvitationRegisterForm] Usuário registrado com sucesso:', signUpData.user.id);
+      console.log('[InvitationRegisterForm] Registro processado:', registerData);
 
       // Login automático (sem confirmação de e-mail)
 const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
