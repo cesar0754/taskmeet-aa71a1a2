@@ -26,7 +26,7 @@ const InvitationProcessingForm: React.FC<InvitationProcessingFormProps> = ({ inv
       console.log('[InvitationProcessingForm] Aceitando convite com token:', token);
       
       // Usar o serviço que envia o JWT no header e trata respostas
-      const result = await acceptInvitation(token);
+      const result = await acceptInvitation(token, invitation.organization_id);
 
       if (!result.success) {
         console.error('[InvitationProcessingForm] Falha ao aceitar convite:', result.message);

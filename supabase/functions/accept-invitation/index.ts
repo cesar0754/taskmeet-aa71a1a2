@@ -24,9 +24,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { token }: AcceptInvitationRequest = await req.json();
+    const { token, organizationId }: { token: string; organizationId?: string } = await req.json();
     
-    console.log("Processando aceitação de convite:", { token });
+    console.log("Processando aceitação de convite:", { token, organizationId });
 
     let currentUserId: string | undefined = undefined;
 
@@ -53,13 +53,25 @@ serve(async (req) => {
       }
     }
 
-    // Buscar convite pendente usando email como token
-    const { data: invitations, error: fetchError } = await supabase
-      .from("organization_members")
-      .select("*")
-      .eq("email", token)
-      .is("user_id", null)
-      .limit(1);
+    // Buscar convite pendente usando email como token (e organização, se informada)
+    let invitationsRes;
+    if (organizationId) {
+      invitationsRes = await supabase
+        .from("organization_members")
+        .select("*")
+        .eq("email", token)
+        .eq("organization_id", organizationId)
+        .is("user_id", null)
+        .limit(1);
+    } else {
+      invitationsRes = await supabase
+        .from("organization_members")
+        .select("*")
+        .eq("email", token)
+        .is("user_id", null)
+        .limit(1);
+    }
+    const { data: invitations, error: fetchError } = invitationsRes as unknown as { data: any[] | null; error: any };
 
     if (fetchError) {
       console.error("Erro ao buscar convite:", fetchError);

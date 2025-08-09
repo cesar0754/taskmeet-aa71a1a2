@@ -5,15 +5,15 @@ import { Member } from '../../types/organization';
 /**
  * Aceita um convite de organização usando a Edge Function
  * @param token Token do convite (email)
- * @param userId ID do usuário que está aceitando (opcional)
+ * @param organizationId ID da organização do convite (opcional)
  * @returns Resultado da aceitação
  */
 export async function acceptInvitation(
   token: string, 
-  userId?: string
+  organizationId?: string
 ): Promise<{ success: boolean; member?: Member; message?: string }> {
   try {
-    console.log('[acceptInvitation] Iniciando processo de aceitação de convite', { token, userId });
+    console.log('[acceptInvitation] Iniciando processo de aceitação de convite', { token, organizationId });
     
     // Obter session do usuário atual para autenticação
     const { data: { session } } = await supabase.auth.getSession();
@@ -24,7 +24,7 @@ export async function acceptInvitation(
 
     // Chamar Edge Function para aceitar convite
     const { data, error } = await supabase.functions.invoke('accept-invitation', {
-      body: { token, userId },
+      body: { token, organizationId },
       headers: {
         Authorization: `Bearer ${session.access_token}`,
       },
