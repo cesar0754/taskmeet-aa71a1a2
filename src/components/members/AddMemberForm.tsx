@@ -52,17 +52,25 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({ onSuccess }) => {
       setIsSubmitting(true);
       setFormStatus('creating');
       
-      await createInvitation(
+      const { emailSent } = await createInvitation(
         organization.id,
         values.email,
         values.name,
         values.role
       );
       
-      toast({
-        title: 'Convite enviado',
-        description: `Um convite foi enviado para ${values.email}`,
-      });
+      if (emailSent) {
+        toast({
+          title: 'Convite enviado',
+          description: `Um convite foi enviado para ${values.email}`,
+        });
+      } else {
+        toast({
+          title: 'Convite criado, mas e-mail não foi entregue',
+          description: 'Use a lista de convites para reenviar ou copiar o link manualmente.',
+          variant: 'destructive',
+        });
+      }
       
       form.reset();
       if (onSuccess) onSuccess();

@@ -7,7 +7,7 @@ export async function createInvitation(
   email: string,
   name: string,
   role: string = 'member'
-): Promise<Invitation> {
+): Promise<{ invitation: Invitation; emailSent: boolean }> {
   try {
     // Verificar se já existe convite pendente para este email na organização
     const { data: existingInvite } = await supabase
@@ -64,8 +64,8 @@ export async function createInvitation(
       console.warn('Falha ao enviar email de convite, mas convite foi criado');
     }
 
-    // Retornar no formato Invitation
-    return {
+// Retornar resultado com status do envio de email
+    const invitation: Invitation = {
       id: member.id,
       organization_id: organizationId,
       email,
@@ -77,6 +77,8 @@ export async function createInvitation(
       used_at: null,
       created_at: member.created_at,
     };
+
+    return { invitation, emailSent };
   } catch (error) {
     console.error('Erro ao criar convite:', error);
     throw error;
