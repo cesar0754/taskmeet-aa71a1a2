@@ -22,12 +22,13 @@ export async function sendInvitationEmail(
     });
 
     if (error) {
-      console.error('Erro ao invocar função de envio de e-mail:', error);
+      console.error('Erro ao invocar Edge Function de envio de e-mail:', error);
       return false;
     }
 
-    console.log('Resposta do serviço de e-mail SMTP:', data);
-    return true;
+    const success = (data as any)?.success === true && !(data as any)?.error;
+    console.log('Resposta da Edge Function de e-mail:', data);
+    return !!success;
   } catch (error) {
     console.error('Erro completo ao enviar e-mail de convite:', error);
     return false;

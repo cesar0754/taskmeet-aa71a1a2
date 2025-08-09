@@ -39,8 +39,19 @@ const handler = async (req: Request): Promise<Response> => {
     if (role === "admin") roleName = "Administrador";
     if (role === "editor") roleName = "Editor";
 
+    const fromEmail = Deno.env.get("INVITE_FROM_EMAIL") || "onboarding@resend.dev";
+    const fromName = Deno.env.get("INVITE_FROM_NAME") || "Convites";
+
+    if (!Deno.env.get("RESEND_API_KEY")) {
+      console.error("RESEND_API_KEY não configurada nas Secrets da Edge Function");
+      return new Response(
+        JSON.stringify({ success: false, error: "RESEND_API_KEY não configurada" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const emailResponse = await resend.emails.send({
-      from: "Convites <onboarding@resend.dev>",
+      from: `${fromName} <${fromEmail}>`,
       to: [email],
       subject: `Convite para ${organization}`,
       html: `
@@ -76,6 +87,21 @@ const handler = async (req: Request): Promise<Response> => {
         </div>
       `,
     });
+
+    // Se a Resend retornou erro, não considerar como sucesso
+    if ((emailResponse as any)?.error) {
+      console.error("Erro ao enviar e-mail via Resend:", (emailResponse as any).error);
+      return new Response(
+        JSON.stringify({ success: false, error: (emailResponse as any).error }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
+    }
 
     console.log("Email enviado com sucesso:", emailResponse);
 
