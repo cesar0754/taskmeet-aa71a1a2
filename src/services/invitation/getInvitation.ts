@@ -3,17 +3,21 @@ import { Invitation } from '@/types/invitation';
 
 export async function getInvitationByToken(token: string): Promise<Invitation | null> {
   try {
-    // Buscar em organization_members pendentes usando email como token
-    const { data: memberData, error: memberError } = await supabase
-      .from('organization_members')
-      .select('*')
-      .eq('email', token) // Usar email como token
-      .is('user_id', null)
-      .maybeSingle();
+    // Buscar via Edge Function pública para contornar RLS na leitura
+    const { data, error } = await supabase.functions.invoke('get-invitation', {
+      body: { token },
+    });
 
-    if (memberError || !memberData) {
+    if (error) {
+      console.error('[getInvitationByToken] Erro na função get-invitation:', error);
       return null;
     }
+
+    if (!data?.success || !data?.invitation) {
+      return null;
+    }
+
+    const memberData = data.invitation;
 
     // Converter para formato Invitation
     return {
@@ -23,6 +27,7 @@ export async function getInvitationByToken(token: string): Promise<Invitation | 
       name: memberData.name,
       role: memberData.role,
       token: token,
+      // Mantemos uma expiração simbólica no cliente; a validação real é no backend
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       invited_by: 'system',
       used_at: null,
