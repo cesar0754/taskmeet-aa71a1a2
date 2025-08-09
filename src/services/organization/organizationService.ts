@@ -8,19 +8,49 @@ import { Organization, Member } from '../../types/organization';
 export async function fetchUserOrganizations(userId: string): Promise<Organization | null> {
   try {
     console.log("Buscando organizações para o usuário:", userId);
-    const { data, error } = await supabase
+
+    // 1) Tentar localizar organização via membresia (usuário convidado)
+    const { data: membership, error: membershipError } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (membershipError) {
+      console.warn('Erro ao verificar membresia do usuário:', membershipError);
+    }
+
+    if (membership?.organization_id) {
+      const { data: orgFromMembership, error: orgFromMembershipError } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', membership.organization_id)
+        .maybeSingle();
+
+      if (orgFromMembershipError) {
+        console.error('Erro ao buscar organização pela membresia:', orgFromMembershipError);
+      } else if (orgFromMembership) {
+        console.log("Organização (via membresia) encontrada:", orgFromMembership);
+        return orgFromMembership;
+      }
+    }
+
+    // 2) Fallback: organização onde o usuário é o proprietário (owner)
+    const { data: ownerOrg, error: ownerError } = await supabase
       .from('organizations')
       .select('*')
       .eq('owner_id', userId)
       .maybeSingle();
 
-    if (error) {
-      console.error('Erro ao buscar organizações do usuário:', error);
-      throw error;
+    if (ownerError) {
+      console.error('Erro ao buscar organização do usuário (owner):', ownerError);
+      throw ownerError;
     }
 
-    console.log("Organizações encontradas:", data);
-    return data;
+    console.log("Organização (via owner) encontrada:", ownerOrg);
+    return ownerOrg || null;
   } catch (error) {
     console.error('Erro completo ao buscar organizações:', error);
     throw error;

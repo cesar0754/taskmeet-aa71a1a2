@@ -33,17 +33,32 @@ const Dashboard: React.FC = () => {
         console.log('[Dashboard] Tentando carregar organização específica por ID:', orgId);
         try {
           setLoading(true);
-          // Verificar se o usuário é membro da organização
-          const { data: memberData, error: memberError } = await supabase
-            .from('organization_members')
-            .select('*')
-            .eq('organization_id', orgId)
-            .eq('user_id', user.id)
-            .single();
-            
-          if (memberError || !memberData) {
-            console.error('[Dashboard] Usuário não é membro da organização:', memberError);
+          // Verificar se o usuário é membro da organização (com tentativas para evitar condição de corrida)
+          let memberData: any | null = null;
+          for (let attempt = 0; attempt < 5; attempt++) {
+            const { data, error } = await supabase
+              .from('organization_members')
+              .select('*')
+              .eq('organization_id', orgId)
+              .eq('user_id', user.id)
+              .maybeSingle();
+            if (data) {
+              memberData = data;
+              break;
+            }
+            if (error && error.code !== 'PGRST116') {
+              console.error('[Dashboard] Erro ao verificar membresia:', error);
+              break;
+            }
+            // pequena espera antes de tentar novamente
+            await new Promise((r) => setTimeout(r, 250));
+          }
+          
+          if (!memberData) {
+            console.error('[Dashboard] Usuário não é membro da organização (após tentativas)');
             setLoading(false);
+            // Evitar travar no spinner quando o parâmetro "org" está presente
+            navigate('/', { replace: true });
             return;
           }
           
