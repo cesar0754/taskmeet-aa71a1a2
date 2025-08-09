@@ -136,10 +136,11 @@ export async function updateExistingOrganization(id: string, data: Partial<Organ
 export async function fetchOrganizationMembers(organizationId: string): Promise<Member[]> {
   try {
     console.log("Buscando membros para a organização:", organizationId);
-    const { data, error } = await supabase
+  const { data, error } = await supabase
       .from('organization_members')
       .select('*')
-      .eq('organization_id', organizationId);
+      .eq('organization_id', organizationId)
+      .not('user_id', 'is', null);
 
     if (error) {
       console.error('Erro ao buscar membros da organização:', error);
