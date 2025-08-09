@@ -13,7 +13,7 @@ const AcceptInvitePage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [showRegistrationForm, setShowRegistrationForm] = useState(true);
   
   // Extrair token da URL
   const params = new URLSearchParams(location.search);
@@ -23,8 +23,8 @@ const AcceptInvitePage: React.FC = () => {
   const { invitation, loading, error } = useInvitation(token);
 
   // Determinar qual formulário mostrar com base no estado do usuário
-  const shouldShowRegistrationForm = !user && invitation && showRegistrationForm;
-  const shouldShowProcessingForm = user && invitation && showRegistrationForm;
+  const shouldShowRegistrationForm = !user && invitation;
+  const shouldShowProcessingForm = !!user && !!invitation;
 
   if (authLoading || loading) {
     return (
@@ -52,18 +52,11 @@ const AcceptInvitePage: React.FC = () => {
               </Alert>
             ) : invitation ? (
               <>
-                {!showRegistrationForm ? (
-                  <InvitationDetails invitation={invitation} />
-                ) : (
-                  <>
-                    {shouldShowRegistrationForm && token && (
-                      <InvitationRegisterForm invitation={invitation} token={token} />
-                    )}
-                    
-                    {shouldShowProcessingForm && token && (
-                      <InvitationProcessingForm invitation={invitation} token={token} />
-                    )}
-                  </>
+                {shouldShowRegistrationForm && token && (
+                  <InvitationRegisterForm invitation={invitation} token={token} />
+                )}
+                {shouldShowProcessingForm && token && (
+                  <InvitationProcessingForm invitation={invitation} token={token} />
                 )}
               </>
             ) : null}

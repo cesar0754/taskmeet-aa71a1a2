@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Invitation } from '@/types/invitation';
+import { profileService } from '@/services/profileService';
 
 const registerSchema = z.object({
   password: z.string()
@@ -56,10 +57,11 @@ const InvitationRegisterForm: React.FC<InvitationRegisterFormProps> = ({ invitat
         email: invitation.email,
         password: values.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
-            name: invitation.name
-          }
-        }
+            name: invitation.name,
+          },
+        },
       });
       
       if (signUpError) {
@@ -74,30 +76,48 @@ const InvitationRegisterForm: React.FC<InvitationRegisterFormProps> = ({ invitat
       }
       
       console.log('[InvitationRegisterForm] Usuário registrado com sucesso:', signUpData.user.id);
-      
-      // Aceitar o convite usando o serviço
+
+      // Login automático (sem confirmação de e-mail)
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: invitation.email,
+        password: values.password,
+      });
+
+      if (signInError) {
+        console.error('[InvitationRegisterForm] Erro ao fazer login automático:', signInError);
+        setError(
+          signInError.message?.includes('confirm')
+            ? 'O login exige confirmação de e-mail no projeto Supabase. Desative "Confirm email" nas configurações para fluxo imediato.'
+            : signInError.message || 'Erro ao fazer login automático.'
+        );
+        return;
+      }
+
+      // Aceitar o convite usando o serviço (requer sessão ativa)
       const { acceptInvitation } = await import('@/services/invitation');
-      const result = await acceptInvitation(token, signUpData.user.id);
+      const result = await acceptInvitation(token, invitation.organization_id);
       
       if (!result.success) {
         console.error('[InvitationRegisterForm] Erro ao aceitar convite:', result.message);
         setError(result.message || 'Erro ao aceitar convite.');
         return;
       }
-      
-      console.log('[InvitationRegisterForm] Convite aceito com sucesso:', result);
-      
-      // Login automático
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: invitation.email,
-        password: values.password
-      });
-      
-      if (signInError) {
-        console.error('[InvitationRegisterForm] Erro ao fazer login automático:', signInError);
-        // Não interrompemos o fluxo se o login automático falhar
+
+      // Atualizar/crear perfil com dados do convite
+      const userId = signInData?.user?.id;
+      if (userId) {
+        try {
+          const existing = await profileService.getProfile(userId);
+          if (!existing) {
+            await profileService.createProfile(userId, { name: invitation.name, email: invitation.email });
+          } else {
+            await profileService.updateProfile(userId, { name: invitation.name, email: invitation.email });
+          }
+        } catch (profileErr) {
+          console.warn('[InvitationRegisterForm] Não foi possível sincronizar perfil agora:', profileErr);
+        }
       }
-      
+
       toast({
         title: 'Conta criada com sucesso',
         description: 'Você agora é membro da organização!',
