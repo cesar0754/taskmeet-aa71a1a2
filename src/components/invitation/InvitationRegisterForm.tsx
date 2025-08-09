@@ -14,14 +14,15 @@ import { Invitation } from '@/types/invitation';
 import { profileService } from '@/services/profileService';
 
 const registerSchema = z.object({
+  email: z.string().email('E-mail inválido'),
   password: z.string()
     .min(8, 'A senha deve ter pelo menos 8 caracteres')
     .regex(/[A-Z]/, 'A senha deve conter pelo menos uma letra maiúscula')
     .regex(/[0-9]/, 'A senha deve conter pelo menos um número'),
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
-  message: "As senhas não coincidem",
-  path: ["confirmPassword"],
+  message: 'As senhas não coincidem',
+  path: ['confirmPassword'],
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -37,9 +38,10 @@ const InvitationRegisterForm: React.FC<InvitationRegisterFormProps> = ({ invitat
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const form = useForm<RegisterFormValues>({
+const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      email: invitation.email || '',
       password: '',
       confirmPassword: '',
     },
@@ -53,8 +55,8 @@ const InvitationRegisterForm: React.FC<InvitationRegisterFormProps> = ({ invitat
       console.log('[InvitationRegisterForm] Registrando novo usuário para:', invitation.email);
       
       // Registrar o novo usuário
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: invitation.email,
+const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: values.email,
         password: values.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
@@ -78,8 +80,8 @@ const InvitationRegisterForm: React.FC<InvitationRegisterFormProps> = ({ invitat
       console.log('[InvitationRegisterForm] Usuário registrado com sucesso:', signUpData.user.id);
 
       // Login automático (sem confirmação de e-mail)
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: invitation.email,
+const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: values.email,
         password: values.password,
       });
 
@@ -109,9 +111,9 @@ const InvitationRegisterForm: React.FC<InvitationRegisterFormProps> = ({ invitat
         try {
           const existing = await profileService.getProfile(userId);
           if (!existing) {
-            await profileService.createProfile(userId, { name: invitation.name, email: invitation.email });
+            await profileService.createProfile(userId, { name: invitation.name, email: values.email });
           } else {
-            await profileService.updateProfile(userId, { name: invitation.name, email: invitation.email });
+            await profileService.updateProfile(userId, { name: invitation.name, email: values.email });
           }
         } catch (profileErr) {
           console.warn('[InvitationRegisterForm] Não foi possível sincronizar perfil agora:', profileErr);
@@ -144,6 +146,19 @@ const InvitationRegisterForm: React.FC<InvitationRegisterFormProps> = ({ invitat
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Seu e-mail</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="Digite seu e-mail" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="password"
