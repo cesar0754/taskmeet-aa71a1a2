@@ -184,3 +184,38 @@ export async function fetchOrganizationMembers(organizationId: string): Promise<
     throw error;
   }
 }
+
+/**
+ * Busca todas as organizações onde o usuário é owner ou membro
+ */
+export async function fetchAllUserOrganizations(userId: string): Promise<Organization[]> {
+  try {
+    // Organizações onde é owner
+    const { data: ownerOrgs, error: ownerErr } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('owner_id', userId);
+    if (ownerErr) throw ownerErr;
+
+    // Organizações onde é membro
+    const { data: memberOrgIds, error: memberErr } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('user_id', userId);
+    if (memberErr) throw memberErr;
+
+    const ids = Array.from(new Set([...(ownerOrgs?.map(o => o.id) || []), ...((memberOrgIds||[]).map(m => m.organization_id))]));
+    if (ids.length === 0) return [];
+
+    const { data: orgs, error: orgsErr } = await supabase
+      .from('organizations')
+      .select('*')
+      .in('id', ids);
+    if (orgsErr) throw orgsErr;
+
+    return orgs || [];
+  } catch (err) {
+    console.error('Erro ao buscar todas as organizações do usuário:', err);
+    return [];
+  }
+}

@@ -11,7 +11,7 @@ export interface Member {
   id: string;
   organization_id: string;
   user_id: string;
-  role: string;
+  role: 'admin' | 'editor' | 'viewer';
   created_at: string;
   email: string;
   name: string;
@@ -23,7 +23,7 @@ export interface OrganizationContextType {
   loading: boolean;
   createOrganization: (name: string) => Promise<Organization | null>;
   updateOrganization: (id: string, data: Partial<Organization>) => Promise<void>;
-  addMember: (email: string, name: string, role: string) => Promise<Member | null>;
+  addMember: (email: string, name: string, role: 'admin' | 'editor' | 'viewer') => Promise<Member | null>;
   updateMember: (id: string, data: Partial<Member>) => Promise<boolean>;
   removeMember: (id: string) => Promise<boolean>;
   setCurrentOrganization: (org: Organization) => void;

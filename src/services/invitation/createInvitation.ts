@@ -6,7 +6,7 @@ export async function createInvitation(
   organizationId: string,
   email: string,
   name: string,
-  role: string = 'member'
+  role: 'admin' | 'editor' | 'viewer' = 'viewer'
 ): Promise<{ invitation: Invitation; emailSent: boolean }> {
   try {
     // Verificar se já existe convite pendente para este email na organização
@@ -29,14 +29,18 @@ export async function createInvitation(
       .eq('id', organizationId)
       .single();
 
+    const normalizedRole: 'admin' | 'editor' | 'viewer' = (['admin','editor','viewer'] as const).includes(role as any)
+      ? role
+      : 'viewer';
+
     // Criar entrada na tabela organization_members (convite pendente)
     const { data: member, error } = await supabase
       .from('organization_members')
-      .insert([{
+      .insert([{ 
         organization_id: organizationId,
         email,
         name,
-        role,
+        role: normalizedRole,
         user_id: null // Pendente
       }])
       .select()
@@ -57,7 +61,7 @@ export async function createInvitation(
       name,
       organization?.name || 'Organização',
       inviteLink,
-      role
+      normalizedRole
     );
 
     if (!emailSent) {
@@ -70,7 +74,7 @@ export async function createInvitation(
       organization_id: organizationId,
       email,
       name,
-      role,
+      role: normalizedRole,
       token: email, // Usando email como token
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       invited_by: 'system',

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { fetchUserOrganizations } from '@/services/organization/organizationService';
+import { fetchAllUserOrganizations } from '@/services/organization/organizationService';
 
 const AuthCallbackPage: React.FC = () => {
   const { user, loading } = useAuth();
@@ -18,15 +18,17 @@ const AuthCallbackPage: React.FC = () => {
       }
 
       console.log('[AuthCallback] Usuário autenticado, verificando organizações');
-      
       try {
-        const org = await fetchUserOrganizations(user.id);
-        if (org) {
-          console.log('[AuthCallback] Organização encontrada, redirecionando para dashboard');
-          navigate('/dashboard');
-        } else {
+        const orgs = await fetchAllUserOrganizations(user.id);
+        if (orgs.length === 0) {
           console.log('[AuthCallback] Nenhuma organização encontrada, redirecionando para criar organização');
           navigate('/create-organization');
+        } else if (orgs.length === 1) {
+          console.log('[AuthCallback] Uma organização encontrada, redirecionando para dashboard');
+          navigate(`/dashboard?org=${orgs[0].id}`);
+        } else {
+          console.log('[AuthCallback] Múltiplas organizações encontradas, redirecionando para seletor');
+          navigate('/select-organization');
         }
       } catch (error) {
         console.error('[AuthCallback] Erro ao verificar organizações:', error);

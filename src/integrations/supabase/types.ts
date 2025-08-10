@@ -219,7 +219,7 @@ export type Database = {
           id: string
           name: string
           organization_id: string
-          role: string
+          role: Database["public"]["Enums"]["organization_role"]
           updated_at: string
           user_id: string | null
         }
@@ -229,7 +229,7 @@ export type Database = {
           id?: string
           name: string
           organization_id: string
-          role?: string
+          role?: Database["public"]["Enums"]["organization_role"]
           updated_at?: string
           user_id?: string | null
         }
@@ -239,7 +239,7 @@ export type Database = {
           id?: string
           name?: string
           organization_id?: string
-          role?: string
+          role?: Database["public"]["Enums"]["organization_role"]
           updated_at?: string
           user_id?: string | null
         }
@@ -259,6 +259,7 @@ export type Database = {
           id: string
           name: string
           owner_id: string
+          owner_member_id: string | null
           updated_at: string
         }
         Insert: {
@@ -266,6 +267,7 @@ export type Database = {
           id?: string
           name: string
           owner_id: string
+          owner_member_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -273,9 +275,18 @@ export type Database = {
           id?: string
           name?: string
           owner_id?: string
+          owner_member_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "organizations_owner_member_fk"
+            columns: ["owner_member_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -383,7 +394,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      user_has_org_write_access: {
+        Args: { _org_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       notification_type:
@@ -394,6 +408,7 @@ export type Database = {
         | "task"
         | "meeting"
         | "invitation"
+      organization_role: "admin" | "editor" | "viewer"
       task_priority: "low" | "medium" | "high"
       task_status: "pending" | "in_progress" | "completed"
     }
@@ -532,6 +547,7 @@ export const Constants = {
         "meeting",
         "invitation",
       ],
+      organization_role: ["admin", "editor", "viewer"],
       task_priority: ["low", "medium", "high"],
       task_status: ["pending", "in_progress", "completed"],
     },

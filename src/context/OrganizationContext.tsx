@@ -30,7 +30,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return updateOrg(id, data, setOrganization);
   }, [updateOrg, setOrganization]);
 
-  const addMember = useCallback(async (email: string, name: string, role: string): Promise<Member | null> => {
+  const addMember = useCallback(async (email: string, name: string, role: 'admin' | 'editor' | 'viewer'): Promise<Member | null> => {
     if (!organization) return null;
     return addMemberAction(organization.id, email, name, role, setMembers);
   }, [organization, addMemberAction, setMembers]);

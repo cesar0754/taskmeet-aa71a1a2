@@ -10,7 +10,7 @@ export async function addNewMember(
   organizationId: string, 
   email: string, 
   name: string, 
-  role: string
+  role: 'admin' | 'editor' | 'viewer'
 ): Promise<Member> {
   try {
     console.log('Adicionando novo membro:', { organizationId, email, name, role });

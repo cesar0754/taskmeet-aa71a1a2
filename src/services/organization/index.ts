@@ -5,7 +5,8 @@ export {
   fetchOrganizationById, 
   createNewOrganization, 
   updateExistingOrganization,
-  fetchOrganizationMembers 
+  fetchOrganizationMembers,
+  fetchAllUserOrganizations 
 } from './organizationService';
 
 export { 

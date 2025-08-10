@@ -8,7 +8,7 @@ export function useAddMember() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const addMember = async (organizationId: string, email: string, name: string, role: string, setMembers: React.Dispatch<React.SetStateAction<Member[]>>) => {
+  const addMember = async (organizationId: string, email: string, name: string, role: 'admin' | 'editor' | 'viewer', setMembers: React.Dispatch<React.SetStateAction<Member[]>>) => {
     if (!organizationId) {
       toast({
         title: 'Erro ao adicionar membro',
