@@ -14,7 +14,7 @@ import { Member } from '@/types/organization';
 const formSchema = z.object({
   name: z.string().min(3, { message: 'O nome deve ter pelo menos 3 caracteres' }),
   email: z.string().email({ message: 'E-mail inválido' }),
-  role: z.enum(['admin', 'editor', 'viewer'], { required_error: 'Selecione uma função' }),
+  role: z.string().min(1, { message: 'Selecione uma função' }),
 });
 
 type FormValues = z.infer<typeof formSchema>;

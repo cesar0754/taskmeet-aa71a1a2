@@ -28,8 +28,6 @@ import AcceptInvitePage from "./pages/AcceptInvitePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage";
 import NotFound from "./pages/NotFound";
-import SelectOrganizationPage from "./pages/SelectOrganizationPage";
-import InvalidInvitePage from "./pages/InvalidInvitePage";
 
 // Criando a instância de QueryClient fora da função de componente
 const queryClient = new QueryClient();
@@ -46,7 +44,6 @@ const ProtectedRoutes = () => {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
-      <Route path="/select-organization" element={<SelectOrganizationPage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
@@ -89,7 +86,6 @@ const App = () => {
               {/* Páginas que funcionam sem autenticação */}
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
               <Route path="/accept-invite" element={<AcceptInvitePage />} />
-              <Route path="/invite/invalid" element={<InvalidInvitePage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/update-password" element={<UpdatePasswordPage />} />
               

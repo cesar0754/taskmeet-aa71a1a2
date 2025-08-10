@@ -25,7 +25,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({ organization, membe
 
   const handleSelect = () => {
     setCurrentOrganization(organization);
-    navigate(`/dashboard?org=${organization.id}`);
+    navigate('/dashboard');
   };
 
   const createdAt = new Date(organization.created_at).toLocaleDateString('pt-BR');

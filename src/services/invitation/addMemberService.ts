@@ -17,10 +17,6 @@ export async function addOrganizationMember(
   try {
     console.log('[addOrganizationMember] Adicionando usuário como membro da organização');
     
-    const normalizedRole = (['admin','editor','viewer'] as const).includes(invitation.role as any)
-      ? (invitation.role as 'admin'|'editor'|'viewer')
-      : 'viewer';
-
     const { data: memberData, error } = await supabase
       .from('organization_members')
       .insert([
@@ -29,7 +25,8 @@ export async function addOrganizationMember(
           user_id: userId,
           email: invitation.email,
           name: invitation.name,
-          role: normalizedRole
+          role: invitation.role,
+          pending: false
         }
       ])
       .select()

@@ -45,14 +45,7 @@ const AcceptInvitePage: React.FC = () => {
             {error ? (
               <Alert variant="destructive" className="mb-4">
                 <AlertTitle>Erro</AlertTitle>
-                <AlertDescription>
-                  {error}
-                  <div className="mt-3">
-                    <a href={`/invite/invalid${token ? `?token=${encodeURIComponent(token)}` : ''}`} className="underline">
-                      Solicitar novo convite
-                    </a>
-                  </div>
-                </AlertDescription>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             ) : invitation ? (
               <>
