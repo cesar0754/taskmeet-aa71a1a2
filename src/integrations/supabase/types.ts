@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -219,7 +219,7 @@ export type Database = {
           id: string
           name: string
           organization_id: string
-          role: string
+          role: Database["public"]["Enums"]["organization_role"]
           updated_at: string
           user_id: string | null
         }
@@ -229,7 +229,7 @@ export type Database = {
           id?: string
           name: string
           organization_id: string
-          role?: string
+          role?: Database["public"]["Enums"]["organization_role"]
           updated_at?: string
           user_id?: string | null
         }
@@ -239,7 +239,7 @@ export type Database = {
           id?: string
           name?: string
           organization_id?: string
-          role?: string
+          role?: Database["public"]["Enums"]["organization_role"]
           updated_at?: string
           user_id?: string | null
         }
@@ -259,6 +259,7 @@ export type Database = {
           id: string
           name: string
           owner_id: string
+          owner_member_id: string | null
           updated_at: string
         }
         Insert: {
@@ -266,6 +267,7 @@ export type Database = {
           id?: string
           name: string
           owner_id: string
+          owner_member_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -273,9 +275,18 @@ export type Database = {
           id?: string
           name?: string
           owner_id?: string
+          owner_member_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "organizations_owner_member_fk"
+            columns: ["owner_member_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -336,6 +347,60 @@ export type Database = {
           },
         ]
       }
+      task_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          organization_id: string
+          task_id: string
+          updated_at: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          organization_id: string
+          task_id: string
+          updated_at?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          organization_id?: string
+          task_id?: string
+          updated_at?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_attachments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_attachments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_to: string | null
@@ -380,10 +445,44 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      task_attachments_with_uploader: {
+        Row: {
+          created_at: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          id: string | null
+          organization_id: string | null
+          task_id: string | null
+          updated_at: string | null
+          uploaded_by: string | null
+          uploader_email: string | null
+          uploader_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_attachments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_attachments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      user_has_org_write_access: {
+        Args: { _org_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       notification_type:
@@ -394,6 +493,7 @@ export type Database = {
         | "task"
         | "meeting"
         | "invitation"
+      organization_role: "admin" | "editor" | "viewer"
       task_priority: "low" | "medium" | "high"
       task_status: "pending" | "in_progress" | "completed"
     }
@@ -532,6 +632,7 @@ export const Constants = {
         "meeting",
         "invitation",
       ],
+      organization_role: ["admin", "editor", "viewer"],
       task_priority: ["low", "medium", "high"],
       task_status: ["pending", "in_progress", "completed"],
     },
